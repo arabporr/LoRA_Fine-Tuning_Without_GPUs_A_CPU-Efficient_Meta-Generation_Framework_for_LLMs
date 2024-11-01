@@ -1,6 +1,3 @@
-from LoRAs_Info import Number_of_LoRAs, LoRAs_IDs, LoRAs_List, Datasets_List
-from config import *
-
 import os
 import gc
 import itertools
@@ -13,12 +10,14 @@ import torch
 from datasets import load_dataset
 from transformers import AutoTokenizer
 
-tokenizer = AutoTokenizer.from_pretrained(base_model_name)
+from LoRAs_Info import Number_of_LoRAs, LoRAs_IDs, LoRAs_List, Datasets_List
+from config import *
 
 
-# dataset tokenizer and saving part
+#### Dataset Tokenizer and Saving Part
 missing_datasets = []
 working_datasets = []
+tokenizer = AutoTokenizer.from_pretrained(base_model_name)
 
 
 def tokenize_and_save(index: int):
@@ -63,8 +62,7 @@ if missing_count:
     print(f"*** BE CAREFUL, {missing_count} DATASETS ARE MISSING !!! ***")
 
 
-# distances calculation and saving part
-
+#### Distances Calculation and Saving Part
 Distance_Vectors = torch.zeros((len(working_datasets), len(working_datasets)))
 
 
@@ -115,7 +113,11 @@ for future in as_completed(futures):
         print(future.result())
 
 
-torch.save(Distance_Vectors, "Distance_Vectors.pt")
+results_path = os.path.join(parent_dir_data, distances_result_file)
+torch.save(Distance_Vectors, results_path)
+del Distance_Vectors
+gc.collect()
 
+#### End of Script Print
 print(40 * "*")
 print("DISTANCES PART FINISHED SUCCESSFULLY")
