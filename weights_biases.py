@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 from safetensors import safe_open
 
-from LoRAs_Info import Number_of_LoRAs, LoRAs_IDs, LoRAs_List, Datasets_List
+from LoRAs_Info import *
 from config import *
 
 
@@ -20,15 +20,15 @@ dl_adapters_configs = False
 
 def download_params(index: int) -> str:
     params_file_url = f"https://huggingface.co/{LoRAs_List[index]}/resolve/main/adapter_model.safetensors?download=true"
-    params_file_name = os.path.join(adapters_folder_path, f"{index}.safetensors")
+    params_file_path = os.path.join(adapters_folder_path, f"{index}.safetensors")
 
     if dl_adapters_configs:
         conf_file_url = f"https://huggingface.co/{LoRAs_List[index]}/resolve/main/adapter_config.json?download=true"
         conf_file_name = f"{index}_conf.json"
 
-    if not os.path.exists(params_file_name):
+    if not os.path.exists(params_file_path):
         try:
-            wget.download(url=params_file_url, out=params_file_name)
+            wget.download(url=params_file_url, out=params_file_path)
             if dl_adapters_configs:
                 wget.download(url=conf_file_url, out=conf_file_name)
             return f"Done with downloading LoRA Adaptors {index}"

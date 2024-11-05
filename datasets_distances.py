@@ -10,7 +10,7 @@ import torch
 from datasets import load_dataset
 from transformers import AutoTokenizer
 
-from LoRAs_Info import Number_of_LoRAs, LoRAs_IDs, LoRAs_List, Datasets_List
+from LoRAs_Info import *
 from config import *
 
 
@@ -28,13 +28,15 @@ def tokenize_and_save(index: int):
         prompt = sample["input"] + sample["output"][0]
         tokenized_data.append(tokenizer(prompt).input_ids)
     tokenized_data = np.array(list(itertools.chain(*tokenized_data)))
-    torch.save(tokenized_data, os.path.join(datasets_folder_path, f"{index}.pt"))
+    tokenized_data_file_path = os.path.join(datasets_folder_path, f"{index}.pt")
+    torch.save(tokenized_data, tokenized_data_file_path)
     del tokenized_data
     gc.collect()
 
 
 def dataset_handler(index: int) -> str:
-    if not os.path.exists(os.path.join(datasets_folder_path, f"{index}.pt")):
+    tokenized_data_file_path = os.path.join(datasets_folder_path, f"{index}.pt")
+    if not os.path.exists(tokenized_data_file_path):
         try:
             tokenize_and_save(index)
             working_datasets.append(index)
@@ -67,9 +69,9 @@ Distance_Vectors = torch.zeros((len(working_datasets), len(working_datasets)))
 
 
 def W_Distance_Calculator(base_index: int) -> str:
-    distance_file_name = os.path.join(distances_folder_path, f"{base_index}.pt")
+    distance_file_path = os.path.join(distances_folder_path, f"{base_index}.pt")
 
-    if not os.path.exists(distance_file_name):
+    if not os.path.exists(distance_file_path):
         try:
             base_dataset = torch.load(
                 os.path.join(datasets_folder_path, f"{base_index}.pt")
@@ -85,13 +87,13 @@ def W_Distance_Calculator(base_index: int) -> str:
                     dist = wasserstein_distance(base_dataset, second_dateset)
                     Distance_Vectors[base_index][second_index] = dist
                     Distance_Vectors[second_index][base_index] = dist
-            torch.save(Distance_Vectors[base_index], distance_file_name)
+            torch.save(Distance_Vectors[base_index], distance_file_path)
             return f"Done making base dataset: {base_index}"
         except:
             return f"Error in making base dataset: {base_index}"
     else:
         try:
-            distances = torch.load(distance_file_name)
+            distances = torch.load(distance_file_path)
             for second_index in range(len(distances)):
                 if Distance_Vectors[base_index][second_index] == 0:
                     Distance_Vectors[base_index][second_index] = distances[second_index]
