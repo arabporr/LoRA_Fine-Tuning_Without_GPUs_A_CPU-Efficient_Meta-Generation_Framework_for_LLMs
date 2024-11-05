@@ -68,3 +68,11 @@ adapters_result_file = "All_Adapters.pt"
 adapters_folder_path = os.path.join(parent_dir_data, adapters_folder_name)
 if not os.path.exists(adapters_folder_path):
     os.makedirs(adapters_folder_path)
+
+processed_distances_result_file = "Distances_Processed.pt"
+
+predictions_folder_name = "Predictions"
+predictions_result_file = "All_Predictions.pt"
+predictions_folder_path = os.path.join(parent_dir_data, predictions_folder_name)
+if not os.path.exists(predictions_folder_path):
+    os.makedirs(predictions_folder_path)
