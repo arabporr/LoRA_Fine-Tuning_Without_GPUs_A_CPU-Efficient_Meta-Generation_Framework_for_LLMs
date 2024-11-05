@@ -16,7 +16,7 @@ distances_processed = torch.load(dist_proc_file_path, weights_only=False).to(dev
 all_adap_file_path = os.path.join(parent_dir_data, adapters_result_file)
 all_adapters = torch.load(all_adap_file_path, weights_only=False).to(device)
 
-predicted_adapters = torch.matmul(distances_processed[:5, :5], all_adapters)
+predicted_adapters = torch.matmul(distances_processed, all_adapters)
 predicted_adapters.to("cpu")
 
 

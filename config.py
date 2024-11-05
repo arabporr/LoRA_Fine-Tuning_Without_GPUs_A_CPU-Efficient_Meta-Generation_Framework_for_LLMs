@@ -76,3 +76,8 @@ predictions_result_file = "All_Predictions.pt"
 predictions_folder_path = os.path.join(parent_dir_data, predictions_folder_name)
 if not os.path.exists(predictions_folder_path):
     os.makedirs(predictions_folder_path)
+
+
+parent_dir_results = os.path.join(current_dir, "results")
+if not os.path.exists(parent_dir_results):
+    os.makedirs(parent_dir_results)

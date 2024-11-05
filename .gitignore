@@ -130,8 +130,9 @@ ENV/
 env.bak/
 venv.bak/
 
-# Datasets
+# Datasets and Run Results
 data/
+results/
 
 # Spyder project settings
 .spyderproject
