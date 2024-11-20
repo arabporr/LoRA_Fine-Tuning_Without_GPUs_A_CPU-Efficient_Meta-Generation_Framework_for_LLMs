@@ -1,74 +1,25 @@
 import os
 import gc
-import itertools
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-import numpy as np
 from scipy.stats import wasserstein_distance
 
 import torch
-from datasets import load_dataset
-from transformers import AutoTokenizer
 
 from LoRAs_Info import *
 from config import *
 
 
-#### Dataset Tokenizer and Saving Part
-missing_datasets = []
-working_datasets = []
-tokenizer = AutoTokenizer.from_pretrained(base_model_name)
-
-
-def tokenize_and_save(index: int):
-    data_address = Datasets_List[index]
-    ds = load_dataset(data_address)
-    tokenized_data = []
-    for sample in ds["train"]:
-        prompt = sample["input"] + sample["output"][0]
-        tokenized_data.append(tokenizer(prompt).input_ids)
-    tokenized_data = np.array(list(itertools.chain(*tokenized_data)))
-    tokenized_data_file_path = os.path.join(datasets_folder_path, f"{index}.pt")
-    torch.save(tokenized_data, tokenized_data_file_path)
-    del tokenized_data
-    gc.collect()
-
-
-def dataset_handler(index: int) -> str:
-    tokenized_data_file_path = os.path.join(datasets_folder_path, f"{index}.pt")
-    if not os.path.exists(tokenized_data_file_path):
-        try:
-            tokenize_and_save(index)
-            working_datasets.append(index)
-            return "LoRA {index} successfully tokenized and saved."
-        except:
-            missing_datasets.append(index)
-            return f"Error in loading LoRA {index}"
-    else:
-        working_datasets.append(index)
-        return "LoRA {index} found in the folder!"
-
-
-_max_threads = min(max_threads_cpu_task, max_threads_memory_task)
-with ThreadPoolExecutor(max_workers=_max_threads) as executor:
-    futures = [
-        executor.submit(dataset_handler, index) for index in range(Number_of_LoRAs)
-    ]
-    for future in as_completed(futures):
-        if "Error" in future.result():
-            print(future.result())
-
-print("Finished downloading and tokenizing LoRA datasets.")
-missing_count = Number_of_LoRAs - len(os.listdir(datasets_folder_path))
-if missing_count:
-    print(f"*** BE CAREFUL, {missing_count} DATASETS ARE MISSING !!! ***")
-
-
-#### Distances Calculation and Saving Part
+working_datasets = torch.load(working_datasets_path)
 Distance_Vectors = torch.zeros((len(working_datasets), len(working_datasets)))
 
 
-def W_Distance_Calculator(base_index: int) -> str:
+#### Setting Distance Measure
+distance_metric = wasserstein_distance
+
+
+#### Distances Calculation and Saving Part
+def Distance_Calculator(base_index: int) -> str:
     distance_file_path = os.path.join(distances_folder_path, f"{base_index}.pt")
 
     if not os.path.exists(distance_file_path):
@@ -84,7 +35,7 @@ def W_Distance_Calculator(base_index: int) -> str:
                     second_dateset = torch.load(
                         os.path.join(datasets_folder_path, f"{second_index}.pt")
                     )
-                    dist = wasserstein_distance(base_dataset, second_dateset)
+                    dist = distance_metric(base_dataset, second_dateset)
                     Distance_Vectors[base_index][second_index] = dist
                     Distance_Vectors[second_index][base_index] = dist
             torch.save(Distance_Vectors[base_index], distance_file_path)
@@ -104,11 +55,12 @@ def W_Distance_Calculator(base_index: int) -> str:
             return f"Error in loading base dataset: {base_index}"
 
 
+#### Multi-Threading
 working_datasets.sort()
 _max_threads = max_threads_cpu_task
 with ThreadPoolExecutor(max_workers=_max_threads) as executor:
     futures = [
-        executor.submit(W_Distance_Calculator, index) for index in working_datasets
+        executor.submit(Distance_Calculator, index) for index in working_datasets
     ]
 for future in as_completed(futures):
     if "Error" in future.result():
@@ -117,6 +69,7 @@ for future in as_completed(futures):
 
 results_path = os.path.join(parent_dir_data, distances_result_file)
 torch.save(Distance_Vectors, results_path)
+
 del Distance_Vectors
 gc.collect()
 

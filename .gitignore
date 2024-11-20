@@ -76,6 +76,7 @@ docs/_build/
 target/
 
 # Jupyter Notebook
+testing.ipynb
 .ipynb_checkpoints
 
 # IPython
@@ -129,6 +130,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+
 
 # Datasets and Run Results
 data/
