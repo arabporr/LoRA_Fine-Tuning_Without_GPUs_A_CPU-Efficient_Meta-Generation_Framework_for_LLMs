@@ -8,6 +8,8 @@ from scipy.stats import wasserstein_distance
 
 import torch
 
+from tqdm import tqdm
+
 from LoRAs_Info import *
 from config import *
 from experiment_info import distance
@@ -17,34 +19,41 @@ Distance_Vectors = torch.zeros((len(working_datasets), len(working_datasets)))
 
 
 # Distance Function
-def W_Distance(f1_samples, f2_samples):
+def pdf_maker():
+    global hists
+    hists = []
+
+    bins = np.arange(0, tokenizer_dictionary_size)  # Domain is dictionary size
+    epsilon = 1e-10
+
+    for index in tqdm(range(Number_of_LoRAs), desc="Making density functions: "):
+        base_dataset = torch.load(
+            os.path.join(datasets_folder_path, f"{index}.pt"),
+            weights_only=False,
+        )
+        hist, _ = np.histogram(base_dataset, bins=bins, density=True)
+        hist += epsilon
+        hists.append(hist)
+
+
+def W_Distance(f1_samples, f2_samples, index_1, index_2):
     w_dist = wasserstein_distance(
         f1_samples, f2_samples
     )  # if data dimension is bigger than 1, then use Sinkhorn algorithm
     return w_dist
 
 
-def KL_Divergence(f1_samples, f2_samples):
-    bins = np.arange(0, tokenizer_dictionary_size)  # Domain is dictionary size
-    f1_hist, _ = np.histogram(f1_samples, bins=bins, density=True)
-    f2_hist, _ = np.histogram(f2_samples, bins=bins, density=True)
-
-    epsilon = 1e-10
-    f1_hist += epsilon
-    f2_hist += epsilon
+def KL_Divergence(f1_samples, f2_samples, index_1, index_2):
+    f1_hist = hists[index_1]
+    f2_hist = hists[index_2]
 
     kl_div = np.sum(f1_hist * np.log(f1_hist / f2_hist))
     return kl_div
 
 
-def JS_Divergence(f1_samples, f2_samples):
-    bins = np.arange(0, tokenizer_dictionary_size)  # Domain is dictionary size
-    f1_hist, _ = np.histogram(f1_samples, bins=bins, density=True)
-    f2_hist, _ = np.histogram(f2_samples, bins=bins, density=True)
-
-    epsilon = 1e-10
-    f1_hist += epsilon
-    f2_hist += epsilon
+def JS_Divergence(f1_samples, f2_samples, index_1, index_2):
+    f1_hist = hists[index_1]
+    f2_hist = hists[index_2]
 
     m_hist = 0.5 * (f1_hist + f2_hist)
     js_div = 0.5 * np.sum(f1_hist * np.log(f1_hist / m_hist)) + 0.5 * np.sum(
@@ -58,9 +67,11 @@ if distance == "WD":
     distance_metric = W_Distance
     dist_func_is_symmetric = True
 elif distance == "KL":
+    pdf_maker()
     distance_metric = KL_Divergence
     dist_func_is_symmetric = False
 elif distance == "JS":
+    pdf_maker()
     distance_metric = JS_Divergence
     dist_func_is_symmetric = True
 
@@ -85,7 +96,9 @@ def Distance_Calculator(base_index: int) -> str:
                             os.path.join(datasets_folder_path, f"{second_index}.pt"),
                             weights_only=False,
                         )
-                        dist = distance_metric(base_dataset, second_dateset)
+                        dist = distance_metric(
+                            base_dataset, second_dateset, base_index, second_index
+                        )
                         Distance_Vectors[base_index][second_index] = dist
                         Distance_Vectors[second_index][base_index] = dist
                 else:
@@ -96,7 +109,9 @@ def Distance_Calculator(base_index: int) -> str:
                         os.path.join(datasets_folder_path, f"{second_index}.pt"),
                         weights_only=False,
                     )
-                    dist = distance_metric(base_dataset, second_dateset)
+                    dist = distance_metric(
+                        base_dataset, second_dateset, base_index, second_index
+                    )
                     Distance_Vectors[base_index][second_index] = dist
 
             torch.save(Distance_Vectors[base_index], distance_file_path)

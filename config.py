@@ -28,7 +28,7 @@ if torch.cuda.is_available():
 
 # All the cores except 4 for system functionality
 n_cpu_cores = multiprocessing.cpu_count()
-max_threads_cpu_task = n_cpu_cores - 4
+max_threads_cpu_task = n_cpu_cores - 2
 
 # Assume each task consumes 1GB, we use 50% of RAM
 ram_size_gb = int(psutil.virtual_memory().total / (1024 * 1024 * 1000))
