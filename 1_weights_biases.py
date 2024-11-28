@@ -61,8 +61,7 @@ for index in tqdm(range(Number_of_LoRAs)):
     all_params.append(params)
 
 all_params = torch.stack(all_params)
-result_path = os.path.join(parent_dir_data, adapters_result_file)
-torch.save(all_params, result_path)
+torch.save(all_params, adapters_result_file_path)
 del all_params
 gc.collect()
 

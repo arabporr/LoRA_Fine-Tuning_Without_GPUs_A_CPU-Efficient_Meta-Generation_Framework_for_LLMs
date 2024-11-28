@@ -16,11 +16,10 @@ if torch.cuda.is_available():
         device = torch.device("cpu")
 
 #### Data Loading
-actual_weights_path = os.path.join(parent_dir_data, adapters_result_file)
-actual_weights = torch.load(actual_weights_path).to(device)
-
-predicted_weights_path = os.path.join(parent_dir_data, predictions_result_file)
-predicted_weights = torch.load(predicted_weights_path).to(device)
+actual_weights = torch.load(adapters_result_file_path, weights_only=False).to(device)
+predicted_weights = torch.load(predictions_result_file_path, weights_only=False).to(
+    device
+)
 
 
 #### Error Function Definition
@@ -36,15 +35,15 @@ def error_metric(vector1: torch.tensor, vector2: torch.tensor) -> torch.tensor:
 #### Error Calculation
 all_weights_loss = []
 for index in tqdm(range(Number_of_LoRAs)):
-    all_weights_loss.append(
-        error_metric(actual_weights[index], predicted_weights[index])
-    )
+    LoRA_Index_Loss = error_metric(actual_weights[index], predicted_weights[index])
+    loss_file_path = os.path.join(weights_losses_folder_path, f"{index}.pt")
+    torch.save(LoRA_Index_Loss, loss_file_path)
+    all_weights_loss.append(LoRA_Index_Loss)
 
 
 #### Results Saving
 all_weights_loss = torch.stack(all_weights_loss)
-result_path = os.path.join(parent_dir_loss, weights_loss_result_file)
-torch.save(all_weights_loss, result_path)
+torch.save(all_weights_loss, weights_losses_result_file_path)
 
 
 #### Memory Cleaning

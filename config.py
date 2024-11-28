@@ -6,6 +6,7 @@ import torch
 
 from transformers import BitsAndBytesConfig
 
+from experiment_info import *
 
 #### APIs Configs
 from dotenv import load_dotenv
@@ -39,6 +40,7 @@ max_threads_gpu_task = torch.cuda.device_count()
 
 #### LLM Configs
 base_model_name = "mistralai/Mistral-7B-Instruct-v0.2"
+tokenizer_dictionary_size = 32000
 
 bnb_config = BitsAndBytesConfig(
     load_in_4bit=True,
@@ -63,38 +65,52 @@ if not os.path.exists(datasets_folder_path):
     os.makedirs(datasets_folder_path)
 working_datasets_path = os.path.join(parent_dir_data, "Working_datasets_index.pt")
 
-distances_folder_name = "Distances"
-distances_result_file = "Distance_Vectors.pt"
-distances_folder_path = os.path.join(parent_dir_data, distances_folder_name)
-if not os.path.exists(distances_folder_path):
-    os.makedirs(distances_folder_path)
-
+adapters_result_file_path = os.path.join(parent_dir_data, "All_Adapters.pt")
 adapters_folder_name = "Adapters"
-adapters_result_file = "All_Adapters.pt"
 adapters_folder_path = os.path.join(parent_dir_data, adapters_folder_name)
 if not os.path.exists(adapters_folder_path):
     os.makedirs(adapters_folder_path)
 
-processed_distances_result_file = "Distances_Processed.pt"
-
-predictions_folder_name = "Predictions"
-predictions_result_file = "All_Predictions.pt"
-predictions_folder_path = os.path.join(parent_dir_data, predictions_folder_name)
-if not os.path.exists(predictions_folder_path):
-    os.makedirs(predictions_folder_path)
 
 # Results Paths
 parent_dir_results = os.path.join(current_dir, "results")
+parent_dir_results = os.path.join(
+    parent_dir_results, experiment_name
+)  # experiment name added
 if not os.path.exists(parent_dir_results):
     os.makedirs(parent_dir_results)
 
-# Loss Paths
-parent_dir_loss = os.path.join(parent_dir_results, "loss")
+
+distances_result_file_path = os.path.join(parent_dir_results, "Distance_Vectors.pt")
+distances_folder_name = "Distances"
+distances_folder_path = os.path.join(parent_dir_results, distances_folder_name)
+if not os.path.exists(distances_folder_path):
+    os.makedirs(distances_folder_path)
+
+processed_distances_result_file_path = os.path.join(
+    parent_dir_results, "Distances_Processed.pt"
+)
+
+predictions_result_file_path = os.path.join(parent_dir_results, "All_Predictions.pt")
+predictions_folder_name = "Predictions"
+predictions_folder_path = os.path.join(parent_dir_results, predictions_folder_name)
+if not os.path.exists(predictions_folder_path):
+    os.makedirs(predictions_folder_path)
+
+
+# Losses Paths
+parent_dir_loss = os.path.join(parent_dir_results, "Losses")
 if not os.path.exists(parent_dir_loss):
     os.makedirs(parent_dir_loss)
 
-weights_loss_folder_name = "weights_pred_loss"
-weights_loss_result_file = "All_Weights_Preds_Loss.pt"
-weights_loss_folder_path = os.path.join(parent_dir_loss, weights_loss_folder_name)
-if not os.path.exists(weights_loss_folder_path):
-    os.makedirs(weights_loss_folder_path)
+weights_losses_folder_name = "weights_losses"
+weights_losses_result_file_path = os.path.join(parent_dir_loss, "All_Weights_Losses.pt")
+weights_losses_folder_path = os.path.join(parent_dir_loss, weights_losses_folder_name)
+if not os.path.exists(weights_losses_folder_path):
+    os.makedirs(weights_losses_folder_path)
+
+models_losses_folder_name = "models_losses"
+models_losses_result_file_path = os.path.join(parent_dir_loss, "All_Models_Losses.pt")
+models_losses_folder_path = os.path.join(parent_dir_loss, models_losses_folder_name)
+if not os.path.exists(models_losses_folder_path):
+    os.makedirs(models_losses_folder_path)
