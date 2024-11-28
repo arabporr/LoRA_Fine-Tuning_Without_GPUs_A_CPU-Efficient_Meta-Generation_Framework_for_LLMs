@@ -1,11 +1,11 @@
 import datetime
 
 
-distance = "WD"  # WD, KL, or JS
+distance = "JS"  # WD, KL, or JS
 sub_variant = "nonlearnable"  # nonlearnable, normalized, or learnable
 experiment_name = f"{distance}/{sub_variant}/"  # Folder path in results
 experiment_time = datetime.datetime.now().__str__()
-run_number = 0  # defult is 0, for testing
+run_number = 2  # defult is -1, for testing
 experiment_info = f"This is run number {run_number} at {experiment_time}, here we are using {distance} distance function and {sub_variant} sub-variant."
 
 file_path = f"experiment_{run_number}.txt"

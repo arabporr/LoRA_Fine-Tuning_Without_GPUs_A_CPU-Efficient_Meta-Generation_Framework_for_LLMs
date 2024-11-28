@@ -71,7 +71,6 @@ adapters_folder_path = os.path.join(parent_dir_data, adapters_folder_name)
 if not os.path.exists(adapters_folder_path):
     os.makedirs(adapters_folder_path)
 
-
 # Results Paths
 parent_dir_results = os.path.join(current_dir, "results")
 parent_dir_results = os.path.join(
@@ -114,3 +113,24 @@ models_losses_result_file_path = os.path.join(parent_dir_loss, "All_Models_Losse
 models_losses_folder_path = os.path.join(parent_dir_loss, models_losses_folder_name)
 if not os.path.exists(models_losses_folder_path):
     os.makedirs(models_losses_folder_path)
+
+
+# Benchmark Paths
+parent_dir_outputs = os.path.join(parent_dir_data, "Outputs")
+if not os.path.exists(parent_dir_outputs):
+    os.makedirs(parent_dir_outputs)
+
+base_models_outputs_dir = os.path.join(parent_dir_outputs, "base_model")
+if not os.path.exists(base_models_outputs_dir):
+    os.makedirs(base_models_outputs_dir)
+
+base_loras_outputs_dir = os.path.join(parent_dir_outputs, "base_lora")
+if not os.path.exists(base_loras_outputs_dir):
+    os.makedirs(base_loras_outputs_dir)
+
+
+predicted_loras_outputs_dir = os.path.join(
+    parent_dir_results, "predicted_loras_outputs"
+)  # it will be in results and unique for each experiment!
+if not os.path.exists(base_loras_outputs_dir):
+    os.makedirs(base_loras_outputs_dir)
