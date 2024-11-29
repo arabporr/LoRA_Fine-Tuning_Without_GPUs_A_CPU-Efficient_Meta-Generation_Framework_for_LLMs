@@ -132,5 +132,5 @@ if not os.path.exists(base_loras_outputs_dir):
 predicted_loras_outputs_dir = os.path.join(
     parent_dir_results, "predicted_loras_outputs"
 )  # it will be in results and unique for each experiment!
-if not os.path.exists(base_loras_outputs_dir):
-    os.makedirs(base_loras_outputs_dir)
+if not os.path.exists(predicted_loras_outputs_dir):
+    os.makedirs(predicted_loras_outputs_dir)

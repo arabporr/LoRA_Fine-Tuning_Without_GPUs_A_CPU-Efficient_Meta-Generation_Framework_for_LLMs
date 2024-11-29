@@ -83,9 +83,9 @@ for index in tqdm(range(1)):
     data_address = Datasets_List[index]
     dataset = load_dataset(data_address)
 
-    if not os.path.exists(base_lora_outputs_file_path):
+    if not os.path.exists(base_model_outputs_file_path):
         outputs = []
-        for batch in tqdm(dataset["test"], desc="Getting outputs from base model:"):
+        for batch in tqdm(dataset["test"], desc="Getting outputs from base model"):
             result = inference(batch, base_model, tokenizer, lora_device)
             outputs.append([batch, result])
         torch.save(outputs, base_model_outputs_file_path)
@@ -100,7 +100,20 @@ for index in tqdm(range(1)):
 
     if not os.path.exists(base_lora_outputs_file_path):
         outputs = []
-        for batch in tqdm(dataset["test"], desc="Getting outputs from base LoRA:"):
+        for batch in tqdm(dataset["test"], desc="Getting outputs from base LoRA"):
             result = inference(batch, peft_model, tokenizer, lora_device)
             outputs.append([batch, result])
         torch.save(outputs, base_lora_outputs_file_path)
+
+    if not os.path.exists(predicted_lora_outputs_file_path):
+        pred_file_path = os.path.join(
+            predictions_folder_path, f"State_Dictionary{index}.safetensors"
+        )
+        pred_lora = safe_open(pred_file_path, "pt")
+        pred_lora = {k: pred_lora.get_tensor(k) for k in pred_lora.keys()}
+        set_peft_model_state_dict(peft_model, pred_lora)
+        outputs = []
+        for batch in tqdm(dataset["test"], desc="Getting outputs from predicted LoRA"):
+            result = inference(batch, peft_model, tokenizer, lora_device)
+            outputs.append([batch, result])
+        torch.save(outputs, predicted_lora_outputs_file_path)
