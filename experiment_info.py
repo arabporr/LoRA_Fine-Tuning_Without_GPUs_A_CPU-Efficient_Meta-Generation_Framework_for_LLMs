@@ -1,7 +1,7 @@
 import datetime
 
 
-distance = "JS"  # WD, KL, or JS
+distance = "WD"  # WD, KL, or JS
 sub_variant = "nonlearnable"  # nonlearnable, normalized, or learnable
 experiment_name = f"{distance}/{sub_variant}/"  # Folder path in results
 experiment_time = datetime.datetime.now().__str__()

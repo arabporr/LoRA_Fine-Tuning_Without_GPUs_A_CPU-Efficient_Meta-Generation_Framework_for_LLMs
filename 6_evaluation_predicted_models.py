@@ -66,7 +66,7 @@ else:
 
 # def Model_Tester(index):
 
-for index in tqdm(range(1)):
+for index in tqdm(range(Number_of_LoRAs)):
     device_index = index % max_threads
     lora_device = torch.device(
         f"cuda:{device_index}" if device.type == "cuda" else "cpu"
