@@ -66,7 +66,7 @@ else:
 
 # def Model_Tester(index):
 
-for index in tqdm(range(Number_of_LoRAs)):
+for index in tqdm(range(1)):
     device_index = index % max_threads
     lora_device = torch.device(
         f"cuda:{device_index}" if device.type == "cuda" else "cpu"
@@ -75,7 +75,7 @@ for index in tqdm(range(Number_of_LoRAs)):
     base_model_outputs_file_path = os.path.join(base_models_outputs_dir, f"{index}.pt")
     base_lora_outputs_file_path = os.path.join(base_loras_outputs_dir, f"{index}.pt")
     predicted_lora_outputs_file_path = os.path.join(
-        predicted_lora_outputs_file_path, f"{index}.pt"
+        predicted_loras_outputs_dir, f"{index}.pt"
     )
 
     base_model = copy.deepcopy(org_base_model)
