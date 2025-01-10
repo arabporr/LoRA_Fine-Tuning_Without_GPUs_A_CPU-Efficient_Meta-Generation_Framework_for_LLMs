@@ -32,7 +32,7 @@ device = accelerator.device
 from argparse import ArgumentParser
 
 parser = ArgumentParser()
-parser.add_argument("--model_index", type=int, default=0)
+parser.add_argument("--model_index", type=int, default=1)
 
 args = parser.parse_args()
 model_index = args.model_index
@@ -87,6 +87,7 @@ def process_lora(index):
     # Load dataset for this LoRA
     data_address = Datasets_List[index]
     dataset = load_dataset(data_address)
+    dataset.to(lora_device)
 
     # Base model inference
     if not os.path.exists(base_model_outputs_file_path):
@@ -96,6 +97,9 @@ def process_lora(index):
             result = inference(batch, base_model, tokenizer, lora_device)
             outputs.append([batch, result])
         torch.save(outputs, base_model_outputs_file_path)
+
+    gc.collect()
+    torch.cuda.empty_cache()
 
     # Load LoRA
     print(f"Loading LoRA model for index: {index}")
@@ -116,6 +120,9 @@ def process_lora(index):
             outputs.append([batch, result])
         torch.save(outputs, base_lora_outputs_file_path)
 
+    gc.collect()
+    torch.cuda.empty_cache()
+
     # Predicted LoRA inference
     if not os.path.exists(predicted_lora_outputs_file_path):
         print(f"Running predicted LoRA inference for index: {index}")
@@ -132,6 +139,11 @@ def process_lora(index):
             outputs.append([batch, result])
         torch.save(outputs, predicted_lora_outputs_file_path)
     print(f"Finished processing for LoRA index: {index}")
+
+    del base_lora
+    del peft_model
+    gc.collect()
+    torch.cuda.empty_cache()
 
 
 # Distribute tasks across GPUs
