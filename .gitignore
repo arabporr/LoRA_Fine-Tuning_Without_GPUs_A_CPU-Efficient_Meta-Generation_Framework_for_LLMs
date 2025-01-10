@@ -131,6 +131,8 @@ ENV/
 env.bak/
 venv.bak/
 
+# Server running tools
+server_execution_tools/
 
 # Datasets and Run Results
 data/

@@ -3,8 +3,6 @@ import gc
 import wget
 import copy
 
-from concurrent.futures import ThreadPoolExecutor, as_completed
-
 import torch
 
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
@@ -24,11 +22,21 @@ from peft.utils.save_and_load import (
     get_peft_model_state_dict,
 )
 
+
 from accelerate import Accelerator
 
 # Initialize Accelerator
 accelerator = Accelerator()
 device = accelerator.device
+
+from argparse import ArgumentParser
+
+parser = ArgumentParser()
+parser.add_argument("--model_index", type=int, default=0)
+
+args = parser.parse_args()
+model_index = args.model_index
+
 
 # Load base model and tokenizer
 org_base_model = AutoModelForCausalLM.from_pretrained(
@@ -127,18 +135,20 @@ def process_lora(index):
 
 
 # Distribute tasks across GPUs
-for batch_start in range(0, Number_of_LoRAs, num_gpus):
-    print(
-        f"Starting batch from {batch_start} to {min(batch_start + num_gpus, Number_of_LoRAs)}"
-    )
-    batch_end = min(batch_start + num_gpus, Number_of_LoRAs)
-    indices = range(batch_start, batch_end)
+# for batch_start in range(0, Number_of_LoRAs, num_gpus):
+#     print(
+#         f"Starting batch from {batch_start} to {min(batch_start + num_gpus, Number_of_LoRAs)}"
+#     )
+#     batch_end = min(batch_start + num_gpus, Number_of_LoRAs)
+#     indices = range(batch_start, batch_end)
 
-    for index in indices:
-        process_lora(index)
+#     for index in indices:
+#         process_lora(index)
 
-    # Clear memory after each batch
-    print("Clearing memory for next batch...")
-    gc.collect()
-    torch.cuda.empty_cache()
+#     # Clear memory after each batch
+#     print("Clearing memory for next batch...")
+#     gc.collect()
+#     torch.cuda.empty_cache()
+
+process_lora(model_index)
 print("All tasks completed.")
