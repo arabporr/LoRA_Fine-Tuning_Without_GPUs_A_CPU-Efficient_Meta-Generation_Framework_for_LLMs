@@ -26,21 +26,19 @@ from peft.utils.save_and_load import (
 from accelerate import Accelerator
 
 # Initialize Accelerator
-num_gpus = torch.cuda.device_count()
-if num_gpus == 0:
-    raise RuntimeError("No GPUs available for Accelerate to use.")
 accelerator = Accelerator()
-
+device = accelerator.device
 
 from argparse import ArgumentParser
 
 parser = ArgumentParser()
-parser.add_argument("--model_index", type=int, default=1)
+parser.add_argument("--model_index", type=int, default=0)
+
 args = parser.parse_args()
 model_index = args.model_index
 
 
-def inference(batch, model, tokenizer, device, max_input=16000, max_output=10):
+def inference(batch, model, tokenizer, device, max_input=16000, max_output=4096):
     input_ids = tokenizer(
         batch["input"],
         padding=True,
@@ -53,10 +51,59 @@ def inference(batch, model, tokenizer, device, max_input=16000, max_output=10):
     return {"generated_text": generated_text}
 
 
+def batch_inference(
+    dataset,
+    model_name,
+    model,
+    tokenizer,
+    device,
+    batch_size=2,
+    max_input=16000,
+    max_output=4096,
+):
+    outputs = []
+
+    for i in tqdm(
+        range(0, len(dataset), batch_size), desc=f"Batch Inference for {model_name}"
+    ):
+        batch = dataset[i : i + batch_size]
+        inputs = [item["input"] for item in batch]
+        input_ids = tokenizer(
+            inputs,
+            padding=True,
+            truncation=True,
+            max_length=max_input,
+            return_tensors="pt",
+        ).to(device)
+        output_ids = model.generate(**input_ids, max_new_tokens=max_output)
+        new_tokens = output_ids[:, input_ids["input_ids"].shape[-1] :]
+        generated_text = tokenizer.batch_decode(new_tokens, skip_special_tokens=True)
+        outputs.extend([inputs, generated_text])
+    return outputs
+
+
+# Prepare distributed processing
+num_gpus = torch.cuda.device_count()
+if num_gpus == 0:
+    raise RuntimeError("No GPUs available for Accelerate to use.")
+
+
 def process_lora(index):
     print(f"Starting processing for LoRA index: {index}")
-    # Assign device
-    device = accelerator.device
+    # Assign device for this task
+    lora_device = accelerator.device
+
+    # Load base model and tokenizer
+    base_model = AutoModelForCausalLM.from_pretrained(
+        base_model_name,
+        quantization_config=bnb_config,
+    )
+    base_model.eval()
+    base_model.to(lora_device)
+
+    # Load tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(base_model_name)
+    tokenizer.add_special_tokens({"pad_token": "[PAD]", "eos_token": "[EOS]"})
 
     base_model_outputs_file_path = os.path.join(base_models_outputs_dir, f"{index}.pt")
     base_lora_outputs_file_path = os.path.join(base_loras_outputs_dir, f"{index}.pt")
@@ -64,32 +111,16 @@ def process_lora(index):
         predicted_loras_outputs_dir, f"{index}.pt"
     )
 
-    # Load base model
-    base_model = AutoModelForCausalLM.from_pretrained(
-        base_model_name,
-        quantization_config=bnb_config,
-    )
-    base_model.eval()
-    base_model.to(device)
-
-    # Load tokenizer
-    tokenizer = AutoTokenizer.from_pretrained(base_model_name)
-    tokenizer.add_special_tokens({"pad_token": "[PAD]", "eos_token": "[EOS]"})
-
     # Load dataset for this LoRA
     data_address = Datasets_List[index]
     dataset = load_dataset(data_address)
-    # dataset = (
-    #     dataset["test"].shuffle(seed=42).select(range(min(100, len(dataset["test"]))))
-    # )
 
     # Base model inference
     if not os.path.exists(base_model_outputs_file_path):
         print(f"Running base model inference for index: {index}")
-        outputs = []
-        for batch in tqdm(dataset, desc=f"Base Model {index}"):
-            result = inference(batch, base_model, tokenizer, device)
-            outputs.append([batch, result])
+        outputs = batch_inference(
+            dataset["test"], "Base Model", base_model, tokenizer, lora_device
+        )
         torch.save(outputs, base_model_outputs_file_path)
 
     # Load LoRA
@@ -99,15 +130,15 @@ def process_lora(index):
         peft_model = PeftModel.from_pretrained(base_model, peft_model_name)
     except Exception as e:
         raise RuntimeError(f"Error loading LoRA {index}: {str(e)}")
-    peft_model = peft_model.to(device)
+    peft_model = peft_model.to(lora_device)
     peft_model.eval()
 
     # Base LoRA inference
     if not os.path.exists(base_lora_outputs_file_path):
         print(f"Running base LoRA inference for index: {index}")
         outputs = []
-        for batch in tqdm(dataset, desc=f"Base LoRA {index}"):
-            result = inference(batch, peft_model, tokenizer, device)
+        for batch in tqdm(dataset["test"], desc=f"Base LoRA {index}"):
+            result = inference(batch, peft_model, tokenizer, lora_device)
             outputs.append([batch, result])
         torch.save(outputs, base_lora_outputs_file_path)
 
@@ -122,16 +153,11 @@ def process_lora(index):
         set_peft_model_state_dict(peft_model, pred_lora)
 
         outputs = []
-        for batch in tqdm(dataset, desc=f"Predicted LoRA {index}"):
-            result = inference(batch, peft_model, tokenizer, device)
+        for batch in tqdm(dataset["test"], desc=f"Predicted LoRA {index}"):
+            result = inference(batch, peft_model, tokenizer, lora_device)
             outputs.append([batch, result])
         torch.save(outputs, predicted_lora_outputs_file_path)
     print(f"Finished processing for LoRA index: {index}")
-
-    del base_lora
-    del peft_model
-    gc.collect()
-    torch.cuda.empty_cache()
 
 
 # Distribute tasks across GPUs
