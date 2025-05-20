@@ -3,26 +3,26 @@ import os
 from src.config.paths import all_distance_metrics, all_models ,current_dir
 
 script_content = """#!/bin/bash
-#SBATCH --job-name=LoRA_prediction_{metric}_{model}
+#SBATCH --job-name=LoRA_evaluation_{metric}_{model}
 #SBATCH --qos=m2
 #SBATCH -c 30
 #SBATCH --mem=64G
 #SBATCH --gres=gpu:1
 #SBATCH --time=2:00:00
-#SBATCH --output=prediction_{metric}_{model}/slurm-%j.out
-#SBATCH --error=prediction_{metric}_{model}/slurm-%j.err
+#SBATCH --output=evaluation_{metric}_{model}/slurm-%j.out
+#SBATCH --error=evaluation_{metric}_{model}/slurm-%j.err
 
 # Environment Setup
 cd LoRA
 conda activate venv
 
 # Run Experiments
-python scripts/03_adapter_prediction.py -metric={metric} -model={model}
+python scripts/05_evaluations.py -metric={metric} -model={model}
 exit
 """
 
 
-_cur_dir =  os.path.join(current_dir, "running_experiments/2_parallel_adapter_prediction/")
+_cur_dir =  os.path.join(current_dir, "running_experiments/4_parallel_evaluation/")
 
 scripts_dir = os.path.join(_cur_dir, "scripts/")
 os.makedirs(scripts_dir, exist_ok=True)

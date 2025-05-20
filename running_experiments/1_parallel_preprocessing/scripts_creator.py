@@ -3,8 +3,8 @@ import os
 from src.config.paths import all_distance_metrics, current_dir
 
 script_content = """#!/bin/bash
-#SBATCH --job-name=Meta_LoRA_preprocessing_{metric}
-#SBATCH --qos=normal
+#SBATCH --job-name=LoRA_preprocessing_{metric}
+#SBATCH --qos=m2
 #SBATCH -c 30
 #SBATCH --mem=64G
 #SBATCH --gres=gpu:1
@@ -13,7 +13,7 @@ script_content = """#!/bin/bash
 #SBATCH --error=preprocessing_{metric}/slurm-%j.err
 
 # Environment Setup
-cd Meta_LoRA
+cd LoRA
 conda activate venv
 
 # Run Experiments

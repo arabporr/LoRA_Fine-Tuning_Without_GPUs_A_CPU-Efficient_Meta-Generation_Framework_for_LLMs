@@ -22,7 +22,7 @@ def get_requirements(file_path: str) -> List[str]:
 
 
 setup(
-    name="Meta_LoRA",
+    name="LoRA",
     version="1.0.0",
     author="",
     author_email="",

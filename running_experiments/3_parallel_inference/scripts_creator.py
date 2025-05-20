@@ -4,7 +4,7 @@ from src.config.paths import all_distance_metrics, all_models ,current_dir
 from src.data.LoRAs_Info import Number_of_LoRAs
 
 script_content = """#!/bin/bash
-#SBATCH --job-name=Meta_LoRA_inference_{metric}_{model}_{dataset_index}_{qos}
+#SBATCH --job-name=LoRA_inference_{metric}_{model}_{dataset_index}_{qos}
 #SBATCH --qos={qos}
 #SBATCH -c 8
 #SBATCH --mem=16G
@@ -14,7 +14,7 @@ script_content = """#!/bin/bash
 #SBATCH --error=inference_{metric}_{model}_{dataset_index}_{qos}/slurm-%j.err
 
 # Environment Setup
-cd Meta_LoRA
+cd LoRA
 conda activate venv
 
 # Run Experiments
