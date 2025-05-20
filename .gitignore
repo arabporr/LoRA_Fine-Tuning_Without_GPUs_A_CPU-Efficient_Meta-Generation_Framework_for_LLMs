@@ -139,6 +139,7 @@ server_execution_tools/
 0_data/
 0_results/
 0_old_codebase/
+running_experiments/*/scripts
 
 # Spyder project settings
 .spyderproject

@@ -27,10 +27,12 @@ _cur_dir =  os.path.join(current_dir, "running_experiments/1_parallel_preprocess
 scripts_dir = os.path.join(_cur_dir, "scripts/")
 os.makedirs(scripts_dir, exist_ok=True)
 
+run_command_file_location = os.path.join(_cur_dir, "server_commands.sh")
+
 for metric in all_distance_metrics:
     script_filename = f"Slurm_{metric}.sh"
     with open(os.path.join(scripts_dir, script_filename), "w") as f:
         f.write(script_content.format(metric=metric))
 
-    with open(os.path.join(_cur_dir, "server_commands.sh"), "a") as f:
+    with open(run_command_file_location, "a") as f:
         f.write(f"sbatch scripts/Slurm_{metric}.sh \n")
