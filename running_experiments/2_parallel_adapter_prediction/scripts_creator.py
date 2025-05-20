@@ -9,12 +9,13 @@ script_content = """#!/bin/bash
 #SBATCH --mem=64G
 #SBATCH --gres=gpu:1
 #SBATCH --time=2:00:00
-#SBATCH --output=prediction_{metric}_{model}/slurm-%j.out
-#SBATCH --error=prediction_{metric}_{model}/slurm-%j.err
+#SBATCH --output=logs/prediction_{metric}_{model}/slurm-%j.out
+#SBATCH --error=logs/prediction_{metric}_{model}/slurm-%j.err
 
 # Environment Setup
+cd
 cd LoRA
-conda activate venv
+source venv/bin/activate
 
 # Run Experiments
 python scripts/03_adapter_prediction.py -metric={metric} -model={model}
@@ -37,4 +38,4 @@ for metric in all_distance_metrics:
             f.write(script_content.format(metric=metric, model=model))
 
         with open(run_command_file_location, "a") as f:
-            f.write(f"sbatch scripts/Slurm_{metric}_{model}.sh \n")
+            f.write(f"sbatch running_experiments/2_parallel_adapter_prediction/scripts/Slurm_{metric}_{model}.sh \n")

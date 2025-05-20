@@ -10,12 +10,13 @@ script_content = """#!/bin/bash
 #SBATCH --mem=16G
 #SBATCH --gres=gpu:rtx6000:1
 #SBATCH --time={time_limit}
-#SBATCH --output=inference_{metric}_{model}_{dataset_index}_{qos}/slurm-%j.out
-#SBATCH --error=inference_{metric}_{model}_{dataset_index}_{qos}/slurm-%j.err
+#SBATCH --output=logs/inference_{metric}_{model}_{dataset_index}_{qos}/slurm-%j.out
+#SBATCH --error=logs/inference_{metric}_{model}_{dataset_index}_{qos}/slurm-%j.err
 
 # Environment Setup
+cd
 cd LoRA
-conda activate venv
+source venv/bin/activate
 
 # Run Experiments
 python scripts/04_models_inference.py -metric={metric} -model={model} -dataset_index={dataset_index}
@@ -46,4 +47,4 @@ for q_t in qos_and_time_limit:
                     f.write(script_content.format(metric=metric, model=model, dataset_index=dataset_index, qos=qos, time_limit=time_limit))
 
                 with open(run_command_file_location, "a") as f:
-                    f.write(f"sbatch scripts/Slurm_{metric}_{model}_{dataset_index}_{qos}.sh \n")
+                    f.write(f"sbatch running_experiments/3_parallel_inference/scripts/Slurm_{metric}_{model}_{dataset_index}_{qos}.sh \n")

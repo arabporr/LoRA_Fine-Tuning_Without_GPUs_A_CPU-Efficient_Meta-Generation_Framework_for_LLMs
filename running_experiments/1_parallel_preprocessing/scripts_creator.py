@@ -9,12 +9,13 @@ script_content = """#!/bin/bash
 #SBATCH --mem=64G
 #SBATCH --gres=gpu:1
 #SBATCH --time=6:00:00
-#SBATCH --output=preprocessing_{metric}/slurm-%j.out
-#SBATCH --error=preprocessing_{metric}/slurm-%j.err
+#SBATCH --output=logs/preprocessing_{metric}/slurm-%j.out
+#SBATCH --error=logs/preprocessing_{metric}/slurm-%j.err
 
 # Environment Setup
+cd
 cd LoRA
-conda activate venv
+source venv/bin/activate
 
 # Run Experiments
 python scripts/02_preprocessing.py -metric={metric}
@@ -35,4 +36,4 @@ for metric in all_distance_metrics:
         f.write(script_content.format(metric=metric))
 
     with open(run_command_file_location, "a") as f:
-        f.write(f"sbatch scripts/Slurm_{metric}.sh \n")
+        f.write(f"sbatch running_experiments/1_parallel_preprocessing/scripts/Slurm_{metric}.sh \n")
