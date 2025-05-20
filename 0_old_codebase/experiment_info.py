@@ -2,7 +2,7 @@ import datetime
 
 
 distance = "WD"  # WD, KL, JS, or MMD
-sub_variant = "nonlearnable"  # nonlearnable, normalized, or learnable
+sub_variant = "fewshot"  # nonlearnable, normalized, learnable, or fewshot
 experiment_name = f"{distance}/{sub_variant}/"  # Folder path in results
 experiment_time = datetime.datetime.now().__str__()
 run_number = 1  # defult is -1, for testing

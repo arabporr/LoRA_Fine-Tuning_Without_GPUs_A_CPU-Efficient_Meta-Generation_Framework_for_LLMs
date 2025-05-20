@@ -147,7 +147,7 @@ if sub_variant == "nonlearnable":
 elif sub_variant == "normalized":
     Function = Normalized
 elif sub_variant == "learnable":
-    sub_variant = Learnable
+    Function = Learnable
 elif sub_variant == "fewshot":
     Function = Nonlearnable
 else:
