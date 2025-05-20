@@ -56,7 +56,7 @@ def mlp_version_coefficient_calculator(
     optimizer = torch.optim.Adam(mlp_model.parameters(), lr=0.0001)
     diag_mask = torch.eye(train_matrix.shape[0], dtype=torch.bool)
 
-    for epoch in tqdm(range(10), desc="Optimizer iteration"):
+    for epoch in tqdm(range(20), desc="Optimizer iteration"):
         optimizer.zero_grad()
 
         # Extract only off-diagonal elements

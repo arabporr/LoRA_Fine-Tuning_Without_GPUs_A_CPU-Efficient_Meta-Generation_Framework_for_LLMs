@@ -1,0 +1,12 @@
+sbatch scripts/Slurm_WD_base_version.sh 
+sbatch scripts/Slurm_WD_normalized_version.sh 
+sbatch scripts/Slurm_WD_mlp_version.sh 
+sbatch scripts/Slurm_KL_base_version.sh 
+sbatch scripts/Slurm_KL_normalized_version.sh 
+sbatch scripts/Slurm_KL_mlp_version.sh 
+sbatch scripts/Slurm_JS_base_version.sh 
+sbatch scripts/Slurm_JS_normalized_version.sh 
+sbatch scripts/Slurm_JS_mlp_version.sh 
+sbatch scripts/Slurm_MMD_base_version.sh 
+sbatch scripts/Slurm_MMD_normalized_version.sh 
+sbatch scripts/Slurm_MMD_mlp_version.sh 

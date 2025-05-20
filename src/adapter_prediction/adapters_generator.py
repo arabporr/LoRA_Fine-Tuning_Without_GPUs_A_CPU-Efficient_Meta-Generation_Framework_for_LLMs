@@ -26,7 +26,6 @@ from src.config.paths import (
     all_adapters_file_location,
     predicted_adapters_dir,
     raw_adapters_dir,
-    outputs_results_dir,
 )
 from src.data.LoRAs_Info import Number_of_LoRAs
 
@@ -53,7 +52,7 @@ def generate_adapters(metric: str, model: str) -> None:
     elif model == "normalized_version":
         coefficients = normalized_version_coefficient_calculator(distances_raw)
     elif model == "mlp_version":
-        coefficients, [logs, model] = mlp_version_coefficient_calculator(distances_raw)
+        coefficients, mlp_details_file = mlp_version_coefficient_calculator(distances_raw)
     else:
         raise Exception("Invalid model for distance processing!")
 
@@ -63,8 +62,11 @@ def generate_adapters(metric: str, model: str) -> None:
         coefficients_metric_model_dir, "all_coefficients.pt"
     )
     
-    sdfasf,lsad,f = ** 12 (Save the mlp outputs)
     torch.save(coefficients, coefficients_file_location)
+    
+    if model == "mlp_version":
+        mlp_details_file_location = os.path.join(coefficients_metric_model_dir, "mlp_details.pt")
+        torch.save(mlp_details_file, mlp_details_file_location)
 
     print(40 * "*")
     print("COEFFICIENT CALCULATIONS PART FINISHED SUCCESSFULLY")

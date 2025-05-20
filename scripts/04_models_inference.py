@@ -1,6 +1,6 @@
 import argparse
 
-from src.adapter_prediction.adapters_generator import generate_adapters
+from src.inference.load_and_inference import generate_outputs
 
 
 if __name__ == "__main__":
@@ -9,6 +9,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-model", choices=["base_version", "normalized_version", "mlp_version"]
     )
+    parser.add_argument("-dataset_index", type=int)
     args = parser.parse_args()
 
-    generate_adapters(metric=args.metric, model=args.model)
+    generate_outputs(metric=args.metric, model=args.model, dataset_index=args.dataset_index)

@@ -1,6 +1,6 @@
 import os
 
-from src.config.paths import all_distance_metrics
+from src.config.paths import all_distance_metrics, current_dir
 
 script_content = """#!/bin/bash
 #SBATCH --job-name=Meta_LoRA_preprocessing_{metric}
@@ -17,13 +17,14 @@ cd Meta_LoRA
 conda activate venv
 
 # Run Experiments
-python scripts/02_preprocessing.py {metric}
+python scripts/02_preprocessing.py -metric={metric}
 exit
 """
 
 
-current_dir = os.getcwd()
-scripts_dir = os.path.join(current_dir, "/scripts")
+_cur_dir =  os.path.join(current_dir, "running_experiments/1_parallel_preprocessing/")
+
+scripts_dir = os.path.join(_cur_dir, "scripts/")
 os.makedirs(scripts_dir, exist_ok=True)
 
 for metric in all_distance_metrics:
@@ -31,5 +32,5 @@ for metric in all_distance_metrics:
     with open(os.path.join(scripts_dir, script_filename), "w") as f:
         f.write(script_content.format(metric=metric))
 
-    with open(os.path.join(current_dir, "server_commands.sh"), "a") as f:
+    with open(os.path.join(_cur_dir, "server_commands.sh"), "a") as f:
         f.write(f"sbatch scripts/Slurm_{metric}.sh \n")
