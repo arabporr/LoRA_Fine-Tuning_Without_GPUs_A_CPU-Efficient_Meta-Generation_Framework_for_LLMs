@@ -134,12 +134,11 @@ venv.bak/
 # Server running tools
 server_execution_tools/
 
-# Datasets and Run Results
+# Datasets and large and old files
 /data/
-/results/
 0_data/
 0_results/
-
+0_old_codebase/
 
 # Spyder project settings
 .spyderproject
