@@ -23,20 +23,25 @@ def download_dataset(index: int) -> str:
     else:
         return "dataset {index} already existed!"
 
+def dataset_handler():
+    _max_threads = max_threads_cpu_task
+    with ThreadPoolExecutor(max_workers=_max_threads) as executor:
+        futures = [
+            executor.submit(download_dataset, index)
+            for index in tqdm(range(Number_of_LoRAs))
+        ]
+        for future in as_completed(futures):
+            if "Error" in future.result():
+                print(future.result())
 
-_max_threads = max_threads_cpu_task
-with ThreadPoolExecutor(max_workers=_max_threads) as executor:
-    futures = [
-        executor.submit(download_dataset, index)
-        for index in tqdm(range(Number_of_LoRAs))
-    ]
-    for future in as_completed(futures):
-        if "Error" in future.result():
-            print(future.result())
+    missing_count = Number_of_LoRAs - len(os.listdir(raw_datasets_dir))
+    if missing_count:
+        print(f"*** BE CAREFUL, {missing_count} DATASETS ARE MISSING !!! ***")
 
-missing_count = Number_of_LoRAs - len(os.listdir(raw_datasets_dir))
-if missing_count:
-    print(f"*** BE CAREFUL, {missing_count} DATASETS ARE MISSING !!! ***")
+    print(40 * "*")
+    print("DATASETS DOWNLOADING FINISHED SUCCESSFULLY")
 
-print(40 * "*")
-print("DATASETS DOWNLOADING FINISHED SUCCESSFULLY")
+
+if __name__ == "__main__":
+    dataset_handler()
+

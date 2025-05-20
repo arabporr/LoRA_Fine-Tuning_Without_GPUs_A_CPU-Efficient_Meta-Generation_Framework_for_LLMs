@@ -15,9 +15,6 @@ from src.config.paths import distances_dir, tokenized_datasets_dir
 from src.data.LoRAs_Info import Number_of_LoRAs
 
 
-Distance_Vectors = torch.zeros((Number_of_LoRAs, Number_of_LoRAs))
-
-
 def distance_metric(f1_samples, f2_samples):
     WD_distance = wasserstein_distance(f1_samples, f2_samples)
     # if data dimension is bigger than 1, then use Sinkhorn algorithm
@@ -67,6 +64,9 @@ def Distance_Calculator(first_index: int) -> str:
 
 
 def WD_run():
+    global Distance_Vectors
+    Distance_Vectors = torch.zeros((Number_of_LoRAs, Number_of_LoRAs))
+
     #### Multi-Threading
     _max_threads = max_threads_cpu_task
     with ThreadPoolExecutor(max_workers=_max_threads) as executor:

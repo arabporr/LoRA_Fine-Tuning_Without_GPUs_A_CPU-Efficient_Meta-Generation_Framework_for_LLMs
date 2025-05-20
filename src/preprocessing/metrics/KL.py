@@ -16,21 +16,19 @@ from src.config.paths import distances_dir, tokenized_datasets_dir
 from src.data.LoRAs_Info import Number_of_LoRAs
 
 
-Distance_Vectors = torch.zeros((Number_of_LoRAs, Number_of_LoRAs))
 
-hists = []
+def density_function_maker():
+    bins = np.arange(0, tokenizer_dictionary_size)  # Domain is dictionary size
+    epsilon = 1e-10
 
-bins = np.arange(0, tokenizer_dictionary_size)  # Domain is dictionary size
-epsilon = 1e-10
-
-for index in tqdm(range(Number_of_LoRAs), desc="Making density functions: "):
-    first_tokenized_dataset = torch.load(
-        os.path.join(tokenized_datasets_dir, f"{index}.pt"),
-        weights_only=False,
-    )
-    hist, _ = np.histogram(first_tokenized_dataset, bins=bins, density=True)
-    hist += epsilon
-    hists.append(hist)
+    for index in tqdm(range(Number_of_LoRAs), desc="Making density functions: "):
+        first_tokenized_dataset = torch.load(
+            os.path.join(tokenized_datasets_dir, f"{index}.pt"),
+            weights_only=False,
+        )
+        hist, _ = np.histogram(first_tokenized_dataset, bins=bins, density=True)
+        hist += epsilon
+        hists.append(hist)
 
 
 def distance_metric(index_1, index_2):
@@ -72,6 +70,14 @@ def Distance_Calculator(first_index: int) -> str:
 
 
 def KL_run():
+    global Distance_Vectors
+    Distance_Vectors = torch.zeros((Number_of_LoRAs, Number_of_LoRAs))
+
+    global hists
+    hists = []
+
+    density_function_maker()
+    
     #### Multi-Threading
     _max_threads = max_threads_cpu_task
     with ThreadPoolExecutor(max_workers=_max_threads) as executor:
