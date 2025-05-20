@@ -5,7 +5,6 @@ import torch.nn as nn
 
 from tqdm import tqdm
 
-from src.config.config import GPU_Memory_Free_mb
 from src.config.paths import all_adapters_file_location
 from src.data.LoRAs_Info import Number_of_LoRAs
 
@@ -29,12 +28,6 @@ class MLP(nn.Module):
 def mlp_version_coefficient_calculator(
     distances_vectors: torch.tensor,
 ) -> torch.tensor:
-    #### Device Setup
-    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    # if torch.cuda.is_available():
-    #     if GPU_Memory_Free_mb <= 20000: # should change based on the use case
-    #         device = torch.device("cpu")
-            
     all_adapters = torch.load(all_adapters_file_location, weights_only=False)
 
     # Split into train and test indices (80-20 split)
@@ -86,4 +79,4 @@ def mlp_version_coefficient_calculator(
     mlp_outputs_flat = mlp_model(distances_vectors_flat)
     mlp_outputs = mlp_outputs_flat.squeeze(-1)
     coefficients = softmin(mlp_outputs.fill_diagonal_(torch.inf))
-    return coefficients, [training_logs, mlp_model]
+    return coefficients, training_logs, mlp_model

@@ -44,33 +44,33 @@ def outputs_evaluation(metric: str, model: str) -> None:
             dataset_file_location = os.path.join(raw_datasets_dir, f"{index}.pt")
             dataset = torch.load(dataset_file_location, weights_only=False)
 
-            base_model_outputs_file = os.path.join(
+            base_model_output_results_file = os.path.join(
                 base_model_outputs_dir, f"{index}.pt"
             )
             base_model_outputs = torch.load(
-                base_model_outputs_file,
+                base_model_output_results_file,
                 weights_only=False,
             )
 
-            gpu_fine_tuned_model_outputs_file = os.path.join(
+            gpu_fine_tuned_model_output_results_file = os.path.join(
                 fine_tuned_model_outputs_dir, f"{index}.pt"
             )
             gpu_fine_tuned_model_outputs = torch.load(
-                gpu_fine_tuned_model_outputs_file,
+                gpu_fine_tuned_model_output_results_file,
                 weights_only=False,
             )
 
-            predicted_models_outputs_metric_dir = os.path.join(
+            predicted_models_output_results_metric_dir = os.path.join(
                 models_outputs_dir, metric
             )
-            predicted_models_outputs_metric_model_dir = os.path.join(
-                predicted_models_outputs_metric_dir, model
+            predicted_models_output_results_metric_model_dir = os.path.join(
+                predicted_models_output_results_metric_dir, model
             )
-            predicted_model_outputs_file = os.path.join(
-                predicted_models_outputs_metric_model_dir, f"{index}.pt"
+            predicted_model_output_results_file = os.path.join(
+                predicted_models_output_results_metric_model_dir, f"{index}.pt"
             )
             predicted_model_outputs = torch.load(
-                predicted_model_outputs_file,
+                predicted_model_output_results_file,
                 weights_only=False,
             )
 
@@ -110,7 +110,7 @@ def outputs_evaluation(metric: str, model: str) -> None:
             rouge_metric_results["error"].append("Good")
 
             base_model_exact_match_in_answer = []
-            gpu_fine_tuned_exact_match_in_answer = []
+            gpu_fine_tuned__exact_match_in_answer = []
             predicted_model_exact_match_in_answer = []
 
             number_of_rows = len(dataset["test"])
@@ -126,9 +126,9 @@ def outputs_evaluation(metric: str, model: str) -> None:
                     expected_output
                     in gpu_fine_tuned_model_outputs_trimmed[index].lower()
                 ):
-                    gpu_fine_tuned_exact_match_in_answer.append(1)
+                    gpu_fine_tuned__exact_match_in_answer.append(1)
                 else:
-                    gpu_fine_tuned_exact_match_in_answer.append(0)
+                    gpu_fine_tuned__exact_match_in_answer.append(0)
 
                 if expected_output in predicted_model_outputs_trimmed[index].lower():
                     predicted_model_exact_match_in_answer.append(1)
@@ -137,7 +137,7 @@ def outputs_evaluation(metric: str, model: str) -> None:
 
             accuracy_base_model = sum(base_model_exact_match_in_answer) / number_of_rows
             accuracy_gpu_fine_tuned = (
-                sum(gpu_fine_tuned_exact_match_in_answer) / number_of_rows
+                sum(gpu_fine_tuned__exact_match_in_answer) / number_of_rows
             )
             accuracy_predicted_model = (
                 sum(predicted_model_exact_match_in_answer) / number_of_rows

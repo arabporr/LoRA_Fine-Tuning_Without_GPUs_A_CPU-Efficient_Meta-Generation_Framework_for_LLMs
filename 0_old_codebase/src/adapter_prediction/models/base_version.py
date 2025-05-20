@@ -1,7 +1,7 @@
 import torch
 
 
-def base_version_coefficient_calculator(
+def Base_version_coefficient_calculator(
     distances_vectors: torch.tensor,
 ) -> torch.tensor:
     softmin = torch.nn.Softmin(dim=1)

@@ -26,7 +26,6 @@ from src.config.paths import (
     all_adapters_file_location,
     predicted_adapters_dir,
     raw_adapters_dir,
-    outputs_results_dir,
 )
 from src.data.LoRAs_Info import Number_of_LoRAs
 
@@ -62,8 +61,6 @@ def generate_adapters(metric: str, model: str) -> None:
     coefficients_file_location = os.path.join(
         coefficients_metric_model_dir, "all_coefficients.pt"
     )
-    
-    sdfasf,lsad,f = ** 12 (Save the mlp outputs)
     torch.save(coefficients, coefficients_file_location)
 
     print(40 * "*")

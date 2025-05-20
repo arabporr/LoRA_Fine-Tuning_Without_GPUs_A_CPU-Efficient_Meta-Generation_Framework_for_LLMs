@@ -1,0 +1,17 @@
+accelerate==1.7.0
+evaluate==0.4.3
+huggingface_hub==0.31.4
+numpy==2.2.6
+pandas==2.2.3
+peft==0.15.2
+psutil==5.9.0
+python-dotenv==1.1.0
+safetensors==0.5.3
+scikit_learn==1.6.1
+scipy==1.15.3
+setuptools==72.1.0
+torch==2.7.0+cu118
+tqdm==4.67.1
+transformers==4.51.3
+wget==3.2
+-e .
