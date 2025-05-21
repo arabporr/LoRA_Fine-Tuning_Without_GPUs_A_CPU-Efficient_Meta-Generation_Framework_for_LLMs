@@ -5,6 +5,8 @@ import copy
 
 import torch
 
+torch.backends.cudnn.benchmark = True
+
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from peft import PeftModel, PeftConfig
 
@@ -28,22 +30,22 @@ from peft.utils.save_and_load import set_peft_model_state_dict
 from accelerate import Accelerator
 
 
-def inference(prompt, model, tokenizer, device, max_input=4096, max_output=256):
-    input_ids = tokenizer(
-        prompt["input"],
+
+def inference(prompts, model, tokenizer, device, max_input=4096, max_output=512):
+    batch = tokenizer(
+        prompts,
         padding=True,
         truncation=True,
         max_length=max_input,
         return_tensors="pt",
     )
-    input_ids.to(device)
+    batch = {k: v.to(device) for k, v in batch.items()}
     with torch.no_grad():
-        output_ids = model.generate(**input_ids, max_new_tokens=max_output)
-    generated_text = tokenizer.batch_decode(output_ids, skip_special_tokens=True)
-    return {"generated_text": generated_text}
+        output_ids = model.generate(**batch, max_new_tokens=max_output)
+    return tokenizer.batch_decode(output_ids, skip_special_tokens=True)
 
 
-def generate_outputs(metric, model, dataset_index):
+def generate_outputs(metric, model, dataset_index, batch_size:int = 4):
     num_gpus = torch.cuda.device_count()
     if num_gpus == 0:
         raise RuntimeError("No GPUs available to use!")
@@ -57,8 +59,7 @@ def generate_outputs(metric, model, dataset_index):
         base_model_name,
         quantization_config=bnb_config,
     )
-    base_model.eval()
-    base_model.to(device)
+    base_model.eval().to(device)
 
     # Load tokenizer
     tokenizer = AutoTokenizer.from_pretrained(base_model_name)
@@ -83,25 +84,30 @@ def generate_outputs(metric, model, dataset_index):
     # Load dataset for this LoRA
     dataset_file_location = os.path.join(raw_datasets_dir, f"{dataset_index}.pt")
     dataset = torch.load(dataset_file_location, weights_only=False)
+    test_data = dataset["test"]
 
+    base_model.resize_token_embeddings(len(tokenizer))
     # Base model inference
     if not os.path.exists(base_model_outputs_file_location):
         print(f"Running base model inference for index: {dataset_index}")
         outputs = []
-        for prompt in tqdm(dataset["test"], desc=f"Base Model {dataset_index}"):
-            result = inference(prompt, base_model, tokenizer, device)
-            outputs.append([prompt, result])
+        for i in tqdm(range(0, len(test_data), batch_size),
+                      desc=f"Base Model {dataset_index}"):
+            batch_prompts = test_data[i : i + batch_size]["input"]
+            gen_texts = inference(batch_prompts, base_model, tokenizer, device)
+            for prompt, text in zip(test_data[i : i + batch_size], gen_texts):
+                outputs.append([prompt, {"generated_text": [text]}])
         torch.save(outputs, base_model_outputs_file_location)
 
     # Load GPU fine tuned model
-    print(f"Loading fine tuned model for index: {dataset_index}")
-    peft_model_name = LoRAs_List[dataset_index]
+    print(f"Loading fine-tuned model for index: {dataset_index}")
+    peft_name = LoRAs_List[dataset_index]
     try:
-        peft_model = PeftModel.from_pretrained(base_model, peft_model_name)
+        peft_model = PeftModel.from_pretrained(base_model, peft_name)
     except Exception as e:
-        raise RuntimeError(f"Error loading fine tuned model {dataset_index}: {str(e)}")
-    peft_model = peft_model.to(device)
-    peft_model.eval()
+        raise RuntimeError(f"Error loading fine tuned model {dataset_index}: {e}")
+    peft_model.eval().to(device)
+    peft_model.resize_token_embeddings(len(tokenizer))
 
     # GPU fine tuned model inference
     if not os.path.exists(gpu_fine_tuned_outputs_file_location):
@@ -114,10 +120,22 @@ def generate_outputs(metric, model, dataset_index):
             outputs.append([prompt, result])
         torch.save(outputs, gpu_fine_tuned_outputs_file_location)
 
+    if not os.path.exists(gpu_fine_tuned_outputs_file_location):
+        print(f"Running GPU fine-tuned model inference for index: {dataset_index}")
+        outputs = []
+        for i in tqdm(range(0, len(test_data), batch_size),
+                      desc=f"GPU fine-tuned model {dataset_index}"):
+            batch_prompts = test_data[i : i + batch_size]["input"]
+            gen_texts = inference(batch_prompts, peft_model, tokenizer, device)
+            for prompt, text in zip(test_data[i :  i + batch_size], gen_texts):
+                outputs.append([prompt, {"generated_text": [text]}])
+        torch.save(outputs, gpu_fine_tuned_outputs_file_location)
+
     # Predicted model inference
     if not os.path.exists(predicted_model_outputs_file_location):
         print(f"Running predicted adapters model inference for index: {dataset_index}")
 
+        # load and inject predicted adapters
         predicted_adapters_metric_dir = os.path.join(predicted_adapters_dir, metric)
         predicted_adapters_metric_model_dir = os.path.join(
             predicted_adapters_metric_dir, model
@@ -133,11 +151,12 @@ def generate_outputs(metric, model, dataset_index):
         set_peft_model_state_dict(peft_model, predicted_adapters)
 
         outputs = []
-        for prompt in tqdm(
-            dataset["test"], desc=f"Predicted adapters model {dataset_index}"
-        ):
-            result = inference(prompt, peft_model, tokenizer, device)
-            outputs.append([prompt, result])
+        for i in tqdm(range(0, len(test_data), batch_size),
+                      desc=f"Predicted adapters model {dataset_index}"):
+            batch_prompts = test_data[i : i + batch_size]["input"]
+            gen_texts = inference(batch_prompts, peft_model, tokenizer, device)
+            for prompt, text in zip(test_data[i : i + batch_size], gen_texts):
+                outputs.append([prompt, {"generated_text": [text]}])
         torch.save(outputs, predicted_model_outputs_file_location)
 
     #### End of Run Print
@@ -156,3 +175,4 @@ if __name__ == "__main__":
     generate_outputs(
         metric=args.metric, model=args.model, dataset_index=args.dataset_index
     )
+

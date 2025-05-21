@@ -20,10 +20,10 @@ login(hf_token)
 
 
 #### MultiThreading Configs
-if torch.cuda.is_available():
-    GPU_Memory_Free, GPU_Memory_Total = torch.cuda.mem_get_info()
-    GPU_Memory_Free_mb = GPU_Memory_Free / (1024**2)  # Convert bytes to MB
-    GPU_Memory_Total_mb = GPU_Memory_Total / (1024**2)  # Convert bytes to MB
+# if torch.cuda.is_available():
+#     GPU_Memory_Free, GPU_Memory_Total = torch.cuda.mem_get_info()
+#     GPU_Memory_Free_mb = GPU_Memory_Free / (1024**2)  # Convert bytes to MB
+#     GPU_Memory_Total_mb = GPU_Memory_Total / (1024**2)  # Convert bytes to MB
 
 # All the cores except 4 for system functionality
 n_cpu_cores = multiprocessing.cpu_count()
