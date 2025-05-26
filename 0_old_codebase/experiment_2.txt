@@ -1,2 +1,0 @@
-Experiment info:
-This is run number 2 at 2025-01-16 08:37:40.612985, here we are using KL distance function and nonlearnable sub-variant.

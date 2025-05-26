@@ -1,2 +1,0 @@
-Experiment info:
-This is run number 0 at 2024-11-28 11:33:40.104685, here we are using WD distance function and nonlearnable sub-variant.

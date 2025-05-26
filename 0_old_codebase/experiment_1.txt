@@ -1,2 +1,0 @@
-Experiment info:
-This is run number 1 at 2025-05-20 01:36:17.017817, here we are using WD distance function and fewshot sub-variant.
