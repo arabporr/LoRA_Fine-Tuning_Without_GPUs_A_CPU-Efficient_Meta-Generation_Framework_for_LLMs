@@ -5,7 +5,6 @@ import torch.nn as nn
 
 from tqdm import tqdm
 
-# from src.config.config import GPU_Memory_Free_mb
 from src.config.paths import all_adapters_file_location
 from src.data.LoRAs_Info import Number_of_LoRAs
 
@@ -29,12 +28,7 @@ class MLP(nn.Module):
 def mlp_version_coefficient_calculator(
     distances_vectors: torch.tensor,
 ) -> torch.tensor:
-    #### Device Setup
-    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    # if torch.cuda.is_available():
-    #     if GPU_Memory_Free_mb <= 20000: # should change based on the use case
-    #         device = torch.device("cpu")
-            
+
     all_adapters = torch.load(all_adapters_file_location, weights_only=False)
 
     # Split into train and test indices (80-20 split)
@@ -53,10 +47,10 @@ def mlp_version_coefficient_calculator(
     mlp_model = MLP()
     softmin = torch.nn.Softmin(dim=1)
     loss_func = torch.nn.MSELoss()
-    optimizer = torch.optim.Adam(mlp_model.parameters(), lr=0.0001)
+    optimizer = torch.optim.Adam(mlp_model.parameters(), lr=0.001)
     diag_mask = torch.eye(train_matrix.shape[0], dtype=torch.bool)
 
-    for epoch in tqdm(range(20), desc="Optimizer iteration"):
+    for epoch in tqdm(range(40), desc="Optimizer iteration"):
         optimizer.zero_grad()
 
         # Extract only off-diagonal elements
@@ -66,12 +60,15 @@ def mlp_version_coefficient_calculator(
         outputs = mlp_model(inputs).squeeze(-1)  # Shape: (N*(N-1))
 
         # Create a new matrix and insert transformed values
-        predicted_coefficients = torch.zeros_like(train_matrix)  # Initialize with zeros
-        predicted_coefficients[~diag_mask] = outputs  # Restore off-diagonal values
+        predicted_coefficients = torch.zeros_like(
+            train_matrix)  # Initialize with zeros
+        # Restore off-diagonal values
+        predicted_coefficients[~diag_mask] = outputs
         predicted_coefficients[diag_mask] = torch.inf  # Set diagonal to inf
         predicted_coefficients = softmin(predicted_coefficients)
 
-        predicted_adapters = torch.matmul(predicted_coefficients, target_adapters)
+        predicted_adapters = torch.matmul(
+            predicted_coefficients, target_adapters)
         loss = loss_func(predicted_adapters, target_adapters)
 
         loss.backward()
@@ -81,7 +78,6 @@ def mlp_version_coefficient_calculator(
         training_logs.append(epoch_log)
         print(epoch_log)
 
-    softmin = torch.nn.Softmin(dim=1)
     distances_vectors_flat = distances_vectors.unsqueeze(-1)
     mlp_outputs_flat = mlp_model(distances_vectors_flat)
     mlp_outputs = mlp_outputs_flat.squeeze(-1)

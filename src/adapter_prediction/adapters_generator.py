@@ -32,46 +32,54 @@ from src.data.LoRAs_Info import Number_of_LoRAs
 
 def generate_adapters(metric: str, model: str) -> None:
     if metric == "WD":
-        distances_file_location = os.path.join(distances_dir, "WD_all_distances.pt")
+        distances_file_location = os.path.join(
+            distances_dir, "WD_all_distances.pt")
         distances_raw = torch.load(distances_file_location, weights_only=False)
     elif metric == "KL":
-        distances_file_location = os.path.join(distances_dir, "KL_all_distances.pt")
+        distances_file_location = os.path.join(
+            distances_dir, "KL_all_distances.pt")
         distances_raw = torch.load(distances_file_location, weights_only=False)
     elif metric == "JS":
-        distances_file_location = os.path.join(distances_dir, "JS_all_distances.pt")
+        distances_file_location = os.path.join(
+            distances_dir, "JS_all_distances.pt")
         distances_raw = torch.load(distances_file_location, weights_only=False)
     elif metric == "MMD":
-        distances_file_location = os.path.join(distances_dir, "MMD_all_distances.pt")
+        distances_file_location = os.path.join(
+            distances_dir, "MMD_all_distances.pt")
         distances_raw = torch.load(distances_file_location, weights_only=False)
     else:
         raise Exception("Invalid distance metric!")
 
-    #### Coefficient calculation
+    # Coefficient calculation
     if model == "base_version":
         coefficients = base_version_coefficient_calculator(distances_raw)
     elif model == "normalized_version":
-        coefficients = normalized_version_coefficient_calculator(distances_raw)
+        coefficients, details = normalized_version_coefficient_calculator(
+            distances_raw)
     elif model == "mlp_version":
-        coefficients, mlp_details_file = mlp_version_coefficient_calculator(distances_raw)
+        coefficients, details = mlp_version_coefficient_calculator(
+            distances_raw)
     else:
         raise Exception("Invalid model for distance processing!")
 
     coefficients_metric_dir = os.path.join(coefficients_dir, metric)
-    coefficients_metric_model_dir = os.path.join(coefficients_metric_dir, model)
+    coefficients_metric_model_dir = os.path.join(
+        coefficients_metric_dir, model)
     coefficients_file_location = os.path.join(
         coefficients_metric_model_dir, "all_coefficients.pt"
     )
-    
+
     torch.save(coefficients, coefficients_file_location)
-    
-    if model == "mlp_version":
-        mlp_details_file_location = os.path.join(coefficients_metric_model_dir, "mlp_details.pt")
-        torch.save(mlp_details_file, mlp_details_file_location)
+
+    if model == "mlp_version" or model == "normalized_version":
+        details_file_location = os.path.join(
+            coefficients_metric_model_dir, "logs_and_details.pt")
+        torch.save(details, details_file_location)
 
     print(40 * "*")
     print("COEFFICIENT CALCULATIONS PART FINISHED SUCCESSFULLY")
 
-    #### Adapter generation
+    # Adapter generation
     all_adapters = torch.load(all_adapters_file_location, weights_only=False)
 
     predicted_adapters = torch.matmul(coefficients, all_adapters)
@@ -80,8 +88,9 @@ def generate_adapters(metric: str, model: str) -> None:
     del all_adapters
     gc.collect()
 
-    #### Saving Results
-    predicted_adapters_metric_dir = os.path.join(predicted_adapters_dir, metric)
+    # Saving Results
+    predicted_adapters_metric_dir = os.path.join(
+        predicted_adapters_dir, metric)
     predicted_adapters_metric_model_dir = os.path.join(
         predicted_adapters_metric_dir, model
     )
@@ -100,7 +109,7 @@ def generate_adapters(metric: str, model: str) -> None:
         for key in file.keys():
             actual = file.get_tensor(key)
             length = len(actual.flatten())
-            state_dict_pred[key] = weights_pred[pos : pos + length].reshape(
+            state_dict_pred[key] = weights_pred[pos: pos + length].reshape(
                 actual.shape
             )
             pos += length
