@@ -1,14 +1,16 @@
-import argparse
 import os
 
 import pandas as pd
 
 import torch
 
-from tqdm import tqdm
 import evaluate
 
+
+from src.config.config import max_threads_cpu_task
 from src.config.paths import (
+    all_distance_metrics,
+    all_models,
     raw_datasets_dir,
     base_model_outputs_dir,
     fine_tuned_model_outputs_dir,
@@ -18,240 +20,138 @@ from src.config.paths import (
 from src.data.LoRAs_Info import Number_of_LoRAs
 
 
-def outputs_evaluation(metric: str, model: str) -> None:
-    exact_match = {
-        "dataset_index": [],
-        "base": [],
-        "gpu_fine_tuned": [],
-        "predicted_model": [],
-        "error": [],
-    }
-    erroneous_indexes = []
+all_results = [None] * Number_of_LoRAs
 
-    rouge = evaluate.load("rouge")
+rouge = evaluate.load("rouge")
 
-    rouge_metric_results = {
-        "dataset_index": [],
-        "base": [],
-        "gpu_fine_tuned": [],
-        "predicted_model": [],
-        "error": [],
-    }
 
-    for index in tqdm(Number_of_LoRAs):
+def eval(model: str, data_index: int, outputs: str, refs: str):
+    results = {"model": model, "data_index": data_index}
+    exact_match = 0
+    subsequence_match = 0
+    for o, r in zip(outputs, refs):
+        if o == r:
+            exact_match += 1
+        if r in o:
+            subsequence_match += 1
+    exact_match = exact_match/len(refs)
+    subsequence_match = subsequence_match/len(refs)
 
-        try:
-            dataset_file_location = os.path.join(raw_datasets_dir, f"{index}.pt")
-            dataset = torch.load(dataset_file_location, weights_only=False)
+    rouge_scores = rouge.compute(
+        predictions=outputs,
+        references=refs,
+        use_stemmer=True
+    )
 
-            base_model_outputs_file = os.path.join(
-                base_model_outputs_dir, f"{index}.pt"
-            )
-            base_model_outputs = torch.load(
-                base_model_outputs_file,
-                weights_only=False,
-            )
+    results["exact_match"] = exact_match
+    results["subsequence_match"] = subsequence_match
+    results["rougeL"] = rouge_scores["rougeL"]
+    results["rougeLSum"] = rouge_scores["rougeLsum"]
 
-            gpu_fine_tuned_model_outputs_file = os.path.join(
-                fine_tuned_model_outputs_dir, f"{index}.pt"
-            )
-            gpu_fine_tuned_model_outputs = torch.load(
-                gpu_fine_tuned_model_outputs_file,
-                weights_only=False,
-            )
+    return results
 
-            predicted_models_outputs_metric_dir = os.path.join(
-                models_outputs_dir, metric
-            )
-            predicted_models_outputs_metric_model_dir = os.path.join(
-                predicted_models_outputs_metric_dir, model
-            )
-            predicted_model_outputs_file = os.path.join(
-                predicted_models_outputs_metric_model_dir, f"{index}.pt"
-            )
-            predicted_model_outputs = torch.load(
-                predicted_model_outputs_file,
-                weights_only=False,
-            )
 
-            expected_outputs = [item["output"][0] for item in dataset["test"]]
+def eval_handler(index: int):
+    try:
+        print("Working on dataset: ", index)
+        dataset_file_location = os.path.join(
+            raw_datasets_dir, f"{index}.pt")
+        dataset = torch.load(dataset_file_location, weights_only=False)
+        index_results = []
 
-            base_model_outputs_trimmed = [
-                item[1]["generated_text"][0][len(item[0]["input"]) :]
-                for item in base_model_outputs
-            ]
-            gpu_fine_tuned_model_outputs_trimmed = [
-                item[1]["generated_text"][0][len(item[0]["input"]) :]
-                for item in gpu_fine_tuned_model_outputs
-            ]
-            predicted_model_outputs_trimmed = [
-                item[1]["generated_text"][0][len(item[0]["input"]) :]
-                for item in predicted_model_outputs
-            ]
+        reference_answer = [item["output"][0] for item in dataset["test"]]
 
-            rouge_metric_results["dataset_index"].append(index)
-            rouge_metric_results["base_model"].append(
-                rouge.compute(
-                    predictions=base_model_outputs_trimmed, references=expected_outputs
+        base_model_outputs_file = os.path.join(
+            base_model_outputs_dir, f"{index}.pt"
+        )
+        base_model_outputs = torch.load(
+            base_model_outputs_file,
+            weights_only=False,
+        )
+
+        base_model_outputs_cleaned = [
+            item[1]["generated_text"][0][len(item[0]["input"]):]
+            for item in base_model_outputs
+        ]
+        index_results.append(
+            eval("base_model", index, base_model_outputs_cleaned, reference_answer))
+
+        gpu_fine_tuned_model_outputs_file = os.path.join(
+            fine_tuned_model_outputs_dir, f"{index}.pt"
+        )
+        gpu_fine_tuned_model_outputs = torch.load(
+            gpu_fine_tuned_model_outputs_file,
+            weights_only=False,
+        )
+
+        gpu_fine_tuned_model_outputs_cleaned = [
+            item[1]["generated_text"][0][len(item[0]["input"]):]
+            for item in gpu_fine_tuned_model_outputs
+        ]
+        index_results.append(
+            eval("gpu_fine_tuned", index, gpu_fine_tuned_model_outputs_cleaned, reference_answer))
+
+        for metric in all_distance_metrics:
+            for model in ["mlp_version"]:
+                predicted_models_outputs_metric_dir = os.path.join(
+                    models_outputs_dir, metric
                 )
-            )
-            rouge_metric_results["gpu_fine_tuned"].append(
-                rouge.compute(
-                    predictions=gpu_fine_tuned_model_outputs_trimmed,
-                    references=expected_outputs,
+                predicted_models_outputs_metric_model_dir = os.path.join(
+                    predicted_models_outputs_metric_dir, model
                 )
-            )
-            rouge_metric_results["predicted_adapters_model"].append(
-                rouge.compute(
-                    predictions=predicted_model_outputs_trimmed,
-                    references=expected_outputs,
+                predicted_model_outputs_file = os.path.join(
+                    predicted_models_outputs_metric_model_dir, f"{index}.pt"
                 )
-            )
-            rouge_metric_results["error"].append("Good")
+                predicted_model_outputs = torch.load(
+                    predicted_model_outputs_file,
+                    weights_only=False,
+                )
+                predicted_model_outputs_cleaned = [item[1]["generated_text"][0][len(
+                    item[0]["input"]):] for item in predicted_model_outputs]
 
-            base_model_exact_match_in_answer = []
-            gpu_fine_tuned_exact_match_in_answer = []
-            predicted_model_exact_match_in_answer = []
+                index_results.append(
+                    eval(f"predicted_model_({metric}_{model})", index, predicted_model_outputs_cleaned, reference_answer))
+        all_results[index] = index_results
+        return f"Done with {index}"
+    except Exception as e:
+        return f"Error with {index}! Error: {e}"
 
-            number_of_rows = len(dataset["test"])
-            for index in range(number_of_rows):
-                expected_output = dataset["test"][index]["output"][0].lower()
 
-                if expected_output in base_model_outputs_trimmed[index].lower():
-                    base_model_exact_match_in_answer.append(1)
-                else:
-                    base_model_exact_match_in_answer.append(0)
+def outputs_evaluation() -> None:
+    for i in range(Number_of_LoRAs):
+        eval_handler(i)
+    torch.save(all_results, os.path.join(
+        outputs_results_dir, "all_results.pt"))
 
-                if (
-                    expected_output
-                    in gpu_fine_tuned_model_outputs_trimmed[index].lower()
-                ):
-                    gpu_fine_tuned_exact_match_in_answer.append(1)
-                else:
-                    gpu_fine_tuned_exact_match_in_answer.append(0)
+    for metric in all_distance_metrics:
+        models_results = {'base_model': [],
+                          'gpu_fine_tuned': [],
+                          'predicted_model_(WD_base_version)': [],
+                          'predicted_model_(WD_normalized_version)': [],
+                          'predicted_model_(WD_mlp_version)': [],
+                          'predicted_model_(KL_base_version)': [],
+                          'predicted_model_(KL_normalized_version)': [],
+                          'predicted_model_(KL_mlp_version)': [],
+                          'predicted_model_(JS_base_version)': [],
+                          'predicted_model_(JS_normalized_version)': [],
+                          'predicted_model_(JS_mlp_version)': [],
+                          'predicted_model_(MMD_base_version)': [],
+                          'predicted_model_(MMD_normalized_version)': [],
+                          'predicted_model_(MMD_mlp_version)': []}
+        for index in range(Number_of_LoRAs):
+            dataset_res = all_results[index]
+            for model_res in dataset_res:
+                models_results[model_res["model"]].append(model_res[metric])
 
-                if expected_output in predicted_model_outputs_trimmed[index].lower():
-                    predicted_model_exact_match_in_answer.append(1)
-                else:
-                    predicted_model_exact_match_in_answer.append(0)
+        df = pd.DataFrame.from_dict(models_results)
+        resutls_file_metric_location = os.path.join(
+            outputs_results_dir, f"{metric}_results.csv")
+        df.to_csv(resutls_file_metric_location)
 
-            accuracy_base_model = sum(base_model_exact_match_in_answer) / number_of_rows
-            accuracy_gpu_fine_tuned = (
-                sum(gpu_fine_tuned_exact_match_in_answer) / number_of_rows
-            )
-            accuracy_predicted_model = (
-                sum(predicted_model_exact_match_in_answer) / number_of_rows
-            )
-            print(f"Accuracy Table for model {index}:")
-            print("Base Foundation Model Accuracy: ", accuracy_base_model)
-            print("GPU Fine Tuned Model Accuracy: ", accuracy_gpu_fine_tuned)
-            print("Predicted Adapters Model Accuracy: ", accuracy_predicted_model)
-
-            exact_match["dataset_index"].append(index)
-            exact_match["base_model"].append(accuracy_base_model)
-            exact_match["gpu_fine_tuned"].append(accuracy_gpu_fine_tuned)
-            exact_match["predicted_model"].append(accuracy_predicted_model)
-            exact_match["error"].append("Good")
-
-        except Exception as e:
-            rouge_metric_results["dataset_index"].append(index)
-            rouge_metric_results["base_model"].append(0)
-            rouge_metric_results["gpu_fine_tuned"].append(0)
-            rouge_metric_results["predicted_model"].append(0)
-            rouge_metric_results["error"].append(e)
-
-            exact_match["dataset_index"].append(index)
-            exact_match["base_model"].append(0)
-            exact_match["gpu_fine_tuned"].append(0)
-            exact_match["predicted_model"].append(0)
-            exact_match["error"].append(e)
-            erroneous_indexes.append({"index": index, "error": e})
-
-    rouge_l = {
-        "dataset": [],
-        "base_model": [],
-        "gpu_fine_tuned": [],
-        "predicted_model": [],
-    }
-    rouge_l_sum = {
-        "dataset": [],
-        "base_model": [],
-        "gpu_fine_tuned": [],
-        "predicted_model": [],
-    }
-
-    for index in range(Number_of_LoRAs):
-        if rouge_metric_results["error"][index] == "Good":
-            rouge_l["dataset"].append(index)
-            rouge_l["base_model"].append(
-                rouge_metric_results["base_model"][index]["rougeL"]
-            )
-            rouge_l["gpu_fine_tuned"].append(
-                rouge_metric_results["gpu_fine_tuned"][index]["rougeL"]
-            )
-            rouge_l["predicted_model"].append(
-                rouge_metric_results["predicted_model"][index]["rougeL"]
-            )
-
-            rouge_l_sum["dataset"].append(index)
-            rouge_l_sum["base_model"].append(
-                rouge_metric_results["base_model"][index]["rougeLsum"]
-            )
-            rouge_l_sum["gpu_fine_tuned"].append(
-                rouge_metric_results["gpu_fine_tuned"][index]["rougeLsum"]
-            )
-            rouge_l_sum["predicted_model"].append(
-                rouge_metric_results["predicted_model"][index]["rougeLsum"]
-            )
-
-    outputs_results_metric_dir = os.path.join(outputs_results_dir, metric)
-    outputs_results_metric_model_dir = os.path.join(outputs_results_metric_dir, model)
-    outputs_results_file_location = os.path.join(
-        outputs_results_metric_model_dir, "all_rouge_metrics.pt"
-    )
-    torch.save(rouge_metric_results, outputs_results_file_location)
-
-    df_exact_match = pd.DataFrame.from_dict(exact_match)
-    df_exact_match["predicted_model_better_than_base_model"] = (
-        df_exact_match["predicted_model"] > df_exact_match["base_model"]
-    )
-    df_exact_match["predicted_model_better_than_gpu_fine_tuned"] = (
-        df_exact_match["predicted_model"] > df_exact_match["gpu_fine_tuned"]
-    )
-    df_exact_match["predicted_model_diff_with_base_model"] = (
-        df_exact_match["predicted_model"] - df_exact_match["base_model"]
-    )
-    df_exact_match["predicted_model_diff_with_gpu_fine_tuned"] = (
-        df_exact_match["predicted_model"] - df_exact_match["gpu_fine_tuned"]
-    )
-
-    exact_match_results_file_location = os.path.join(
-        outputs_results_metric_model_dir, "exact_match.csv"
-    )
-    df_exact_match.to_csv(exact_match_results_file_location)
-
-    df_rouge_l = pd.DataFrame.from_dict(rouge_l)
-    rouge_l_results_file_location = os.path.join(
-        outputs_results_metric_model_dir, "rouge_l.csv"
-    )
-    df_rouge_l.to_csv(rouge_l_results_file_location)
-
-    df_rouge_l_sum = pd.DataFrame.from_dict(rouge_l_sum)
-    rouge_l_sum_results_file_location = os.path.join(
-        outputs_results_metric_model_dir, "rouge_l_sum.csv"
-    )
-    df_rouge_l_sum.to_csv(rouge_l_sum_results_file_location)
-
-    #### End of Run Print
+    # End of Run Print
     print(40 * "*")
     print("MODEL OUTPUTS ANALYSIS AND ERROR CALCULATION FINISHED SUCCESSFULLY")
 
 
 if __name__ == "__main__":
-    p = argparse.ArgumentParser()
-    p.add_argument("metric", choices=["WD", "KL", "JS", "MMD"])
-    p.add_argument(
-        "model", choices=["base_version", "normalized_version", "mlp_version"]
-    )
-    args = p.parse_args()
-    outputs_evaluation(metric=args.metric, model=args.model)
+    outputs_evaluation()

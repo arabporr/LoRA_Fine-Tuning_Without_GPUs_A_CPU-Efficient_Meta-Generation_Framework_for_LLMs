@@ -54,10 +54,9 @@ def generate_adapters(metric: str, model: str) -> None:
     if model == "base_version":
         coefficients = base_version_coefficient_calculator(distances_raw)
     elif model == "normalized_version":
-        coefficients, details = normalized_version_coefficient_calculator(
-            distances_raw)
+        coefficients = normalized_version_coefficient_calculator(distances_raw)
     elif model == "mlp_version":
-        coefficients, details = mlp_version_coefficient_calculator(
+        coefficients, mlp_details_file = mlp_version_coefficient_calculator(
             distances_raw)
     else:
         raise Exception("Invalid model for distance processing!")
@@ -71,10 +70,10 @@ def generate_adapters(metric: str, model: str) -> None:
 
     torch.save(coefficients, coefficients_file_location)
 
-    if model == "mlp_version" or model == "normalized_version":
-        details_file_location = os.path.join(
-            coefficients_metric_model_dir, "logs_and_details.pt")
-        torch.save(details, details_file_location)
+    if model == "mlp_version":
+        mlp_details_file_location = os.path.join(
+            coefficients_metric_model_dir, "mlp_details.pt")
+        torch.save(mlp_details_file, mlp_details_file_location)
 
     print(40 * "*")
     print("COEFFICIENT CALCULATIONS PART FINISHED SUCCESSFULLY")

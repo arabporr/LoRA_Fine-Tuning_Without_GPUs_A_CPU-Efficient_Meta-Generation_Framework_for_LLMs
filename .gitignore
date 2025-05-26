@@ -136,6 +136,8 @@ server_execution_tools/
 
 # Datasets and large and old files
 /data/
+/results/
+
 0_data/
 0_results/
 0_old_codebase/
