@@ -111,22 +111,22 @@ for metric in all_distance_metrics:
             os.makedirs(models_outputs_metric_model_dir)
 
 
-numerical_results_dir = os.path.join(
-    parent_dir_results, "evaluation_numerical_results")
-if not os.path.exists(numerical_results_dir):
-    os.makedirs(numerical_results_dir)
+# numerical_results_dir = os.path.join(
+#     parent_dir_results, "evaluation_numerical_results")
+# if not os.path.exists(numerical_results_dir):
+#     os.makedirs(numerical_results_dir)
 
-for metric in all_distance_metrics:
-    numerical_results_metric_dir = os.path.join(numerical_results_dir, metric)
-    if not os.path.exists(numerical_results_metric_dir):
-        os.makedirs(numerical_results_metric_dir)
+# for metric in all_distance_metrics:
+#     numerical_results_metric_dir = os.path.join(numerical_results_dir, metric)
+#     if not os.path.exists(numerical_results_metric_dir):
+#         os.makedirs(numerical_results_metric_dir)
 
-    for model in all_models:
-        numerical_results_metric_model_dir = os.path.join(
-            numerical_results_metric_dir, model
-        )
-        if not os.path.exists(numerical_results_metric_model_dir):
-            os.makedirs(numerical_results_metric_model_dir)
+#     for model in all_models:
+#         numerical_results_metric_model_dir = os.path.join(
+#             numerical_results_metric_dir, model
+#         )
+#         if not os.path.exists(numerical_results_metric_model_dir):
+#             os.makedirs(numerical_results_metric_model_dir)
 
 
 outputs_results_dir = os.path.join(
