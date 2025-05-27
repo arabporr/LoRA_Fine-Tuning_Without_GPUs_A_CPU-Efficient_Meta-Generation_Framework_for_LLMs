@@ -1,9 +1,0 @@
-
-Hi,
-
-Thanks for checking out our project. This code is to demonstrate how we made our results and does the whole pipeline for 500 datasets and 12 different settings. Obviously this is not a showcase of end user usage of our idea. This code has two parts, the first part which predicts adapters and can be run on a single CPU machine. The second part (inference and eval) which load the predicted adapters and tests these models to measure the quality of their outputs. Since, in our study we are using a huge set of 500 datasets, and we have 12 different combination of settings, this code is to solve around 6000 problems and generate results for, thus, inherently really heavy. The first part, takes around 6-8 hours on a single laptop with 20 cores and requires 64 GB ram for this huge amount of datasets. However, to inference and test a these 6000 models, you require access to a computing cluster with multiple GPUs to generate all the outputs for later evaluation.
-
-Besides that, please put your huggingface token in the ".env" at src/config file before running to avoid getting huggingface error.
-
-Thanks again for your attention and time,
-Best Regards.
