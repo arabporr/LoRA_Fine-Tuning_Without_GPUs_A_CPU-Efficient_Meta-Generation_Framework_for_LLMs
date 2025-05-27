@@ -28,5 +28,5 @@ setup(
     author_email="",
     packages=find_packages(),
     install_requires=get_requirements("requirements.txt"),
-    description="The first version of the data science challenge project",
+    description="Low-Rank Adaptation (LoRA) of Large Language Models on CPU",
 )
