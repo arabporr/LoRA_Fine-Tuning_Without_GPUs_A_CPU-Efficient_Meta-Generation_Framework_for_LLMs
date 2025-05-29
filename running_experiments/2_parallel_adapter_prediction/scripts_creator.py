@@ -1,6 +1,6 @@
 import os
 
-from src.config.paths import all_distance_metrics, all_models ,current_dir
+from src.config.paths import all_distance_metrics, all_models, current_dir
 
 script_content = """#!/bin/bash
 #SBATCH --job-name=LoRA_prediction_{metric}_{model}
@@ -14,7 +14,7 @@ script_content = """#!/bin/bash
 
 # Environment Setup
 cd
-cd LoRA
+cd Low_Rank_Adaptation_on_CPU
 source venv/bin/activate
 
 # Run Experiments
@@ -23,7 +23,8 @@ exit
 """
 
 
-_cur_dir =  os.path.join(current_dir, "running_experiments/2_parallel_adapter_prediction/")
+_cur_dir = os.path.join(
+    current_dir, "running_experiments/2_parallel_adapter_prediction/")
 
 scripts_dir = os.path.join(_cur_dir, "scripts/")
 os.makedirs(scripts_dir, exist_ok=True)
@@ -38,4 +39,5 @@ for metric in all_distance_metrics:
             f.write(script_content.format(metric=metric, model=model))
 
         with open(run_command_file_location, "a") as f:
-            f.write(f"sbatch running_experiments/2_parallel_adapter_prediction/scripts/Slurm_{metric}_{model}.sh \n")
+            f.write(
+                f"sbatch running_experiments/2_parallel_adapter_prediction/scripts/Slurm_{metric}_{model}.sh \n")

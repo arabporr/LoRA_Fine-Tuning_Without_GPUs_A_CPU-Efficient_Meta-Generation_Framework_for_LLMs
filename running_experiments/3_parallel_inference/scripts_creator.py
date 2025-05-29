@@ -15,7 +15,7 @@ script_content = """#!/bin/bash
 
 # Environment Setup
 cd
-cd LoRA
+cd Low_Rank_Adaptation_on_CPU
 source venv/bin/activate
 
 # Run Experiments

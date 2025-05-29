@@ -14,7 +14,7 @@ script_content = """#!/bin/bash
 
 # Environment Setup
 cd
-cd LoRA
+cd Low_Rank_Adaptation_on_CPU
 source venv/bin/activate
 
 # Run Experiments
@@ -23,7 +23,8 @@ exit
 """
 
 
-_cur_dir =  os.path.join(current_dir, "running_experiments/1_parallel_preprocessing/")
+_cur_dir = os.path.join(
+    current_dir, "running_experiments/1_parallel_preprocessing/")
 
 scripts_dir = os.path.join(_cur_dir, "scripts/")
 os.makedirs(scripts_dir, exist_ok=True)
@@ -36,4 +37,5 @@ for metric in all_distance_metrics:
         f.write(script_content.format(metric=metric))
 
     with open(run_command_file_location, "a") as f:
-        f.write(f"sbatch running_experiments/1_parallel_preprocessing/scripts/Slurm_{metric}.sh \n")
+        f.write(
+            f"sbatch running_experiments/1_parallel_preprocessing/scripts/Slurm_{metric}.sh \n")
