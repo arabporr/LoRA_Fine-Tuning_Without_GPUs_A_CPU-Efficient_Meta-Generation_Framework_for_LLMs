@@ -21,7 +21,7 @@ from src.data.LoRAs_Info import Number_of_LoRAs
 
 
 all_results = [None] * Number_of_LoRAs
-
+all_error_metrics = ["exact_match", "subsequence_match", "rougeL", "rougeLSum"]
 rouge = evaluate.load("rouge")
 
 
@@ -92,7 +92,7 @@ def eval_handler(index: int):
             eval("gpu_fine_tuned", index, gpu_fine_tuned_model_outputs_cleaned, reference_answer))
 
         for metric in all_distance_metrics:
-            for model in ["mlp_version"]:
+            for model in all_models:
                 predicted_models_outputs_metric_dir = os.path.join(
                     models_outputs_dir, metric
                 )
@@ -123,7 +123,7 @@ def outputs_evaluation() -> None:
     torch.save(all_results, os.path.join(
         outputs_results_dir, "all_results.pt"))
 
-    for metric in all_distance_metrics:
+    for metric in all_error_metrics:
         models_results = {'base_model': [],
                           'gpu_fine_tuned': [],
                           'predicted_model_(WD_base_version)': [],

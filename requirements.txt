@@ -65,6 +65,7 @@ triton==3.2.0
 typing_extensions==4.12.2
 tzdata==2025.2
 urllib3==2.4.0
+wget
 xxhash==3.5.0
 yarl==1.20.0
 

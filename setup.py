@@ -22,7 +22,7 @@ def get_requirements(file_path: str) -> List[str]:
 
 
 setup(
-    name="LoRA",
+    name="Low_Rank_Adaptation_on_CPU",
     version="1.0.0",
     author="",
     author_email="",
