@@ -25,9 +25,9 @@ python -m venv venv
 source venv/bin/activate
 
 python -m pip install --upgrade pip
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
-pip install scikit-learn
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 pip install -r requirements.txt
+pip install scikit-learn scipy wget
 ```
 
 ### Configuration
