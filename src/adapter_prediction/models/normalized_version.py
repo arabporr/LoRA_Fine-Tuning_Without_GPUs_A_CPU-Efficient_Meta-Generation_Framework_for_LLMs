@@ -8,7 +8,7 @@ from sklearn.preprocessing import StandardScaler
 def normalized_version_coefficient_calculator(
     distances_vectors: torch.tensor,
 ) -> torch.tensor:
-    scaler = StandardScaler(with_mean=False, with_std=False)
+    scaler = StandardScaler()
     distances_vectors_scaled = scaler.fit_transform(distances_vectors.T).T
     distances_vectors_scaled = torch.tensor(distances_vectors_scaled).float()
 
