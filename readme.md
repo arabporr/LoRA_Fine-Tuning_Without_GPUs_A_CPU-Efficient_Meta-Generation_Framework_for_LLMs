@@ -73,6 +73,7 @@ However, you might wish to use different models or settings tailored to your own
 ├── src/
 │   ├── adapter_prediction/
 │   ├── config/
+│   ├── data/
 │   ├── evaluation/
 │   ├── inference/
 │   └── preprocessing/
