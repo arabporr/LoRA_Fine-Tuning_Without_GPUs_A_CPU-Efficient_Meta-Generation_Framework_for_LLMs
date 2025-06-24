@@ -72,11 +72,13 @@ However, you might wish to use different models or settings tailored to your own
 ├── scripts/
 ├── src/
 │   ├── adapter_prediction/
+│   │    └── models/
 │   ├── config/
 │   ├── data/
 │   ├── evaluation/
 │   ├── inference/
 │   └── preprocessing/
+│       └── metrics/
 └── running_experiments/
 ```
 
