@@ -25,9 +25,8 @@ python -m venv venv
 source venv/bin/activate
 
 python -m pip install --upgrade pip
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
 pip install -r requirements.txt
-pip install scikit-learn scipy wget
 ```
 
 ### Configuration
@@ -38,6 +37,22 @@ Place your HuggingFace token into `.env` in the `src/config` folder to avoid Hug
 HUGGINGFACE_TOKEN="your_token_here"
 ```
 
+### Customizing Datasets and Model Configuration
+
+For our paper, we utilized an extensive and valuable collection of datasets and adapters from the ["Lots of LoRAs"](https://huggingface.co/Lots-of-LoRAs) Hugging Face repository, generously shared by Rickard Brüel Gabrielsson and his teammates (**THANK YOU!**).
+
+However, you might wish to use different models or settings tailored to your own experiments. To achieve this:
+
+- **Update Model and BitsAndBytes Settings:**
+  Adjust model and quantization settings by modifying the configuration file located at:
+  ```bash
+  src/conf/config.py
+  ```
+- **Update Dataset and Adapter Information:**
+  Change the datasets and adapter list by editing:
+  ```bash
+  src/data/LoRA_Info.py
+  ```
 ---
 
 ## Project Structure
@@ -70,54 +85,68 @@ HUGGINGFACE_TOKEN="your_token_here"
 
 ### Quick Start
 
-To download datasets, preprocess data, and predict adapters for a single metric and version:
+The following steps outline each stage explicitly to help you understand the process clearly:
+
+**Note:** These steps showcase the explicit individual processes. For streamlined and efficient execution, use the provided `run_script.sh` script as described in the next (Comprehensive Execution) section.
+
+**Step 1: Download Datasets**
+
+Downloads necessary datasets and adapters from external sources available at the `LoRA_Info.py` file at the `src/data/` folder:
 
 ```bash
 python scripts/01_downloads.py
+```
+
+**Step 2: Preprocess Data**
+
+Processes (tokenize) raw datasets and calculate pairwise distances using the specified similarity metric (default is `KL`, but `WD`, `JS`, `MMD` are also available):
+
+```bash
 python scripts/02_preprocessing.py -metric=KL
+```
+
+**Step 3: Adapter Prediction**
+
+Generates adapters based on the distances and selected model to integrate other adapters' information (`base_version` by default, `normalized_version`, `mlp_version` are also available):
+
+```bash
 python scripts/03_adapter_prediction.py -metric=KL -model=base_version
 ```
 
+
+
 ### Comprehensive Execution
 
-Execute the full pipeline for all metrics (WD, KL, JS, MMD) and all adapter model versions (`base_version`, `normalized_version`, `mlp_version`):
+A convenient script is provided (`run_script.sh`) to simplify the execution process:
+
+- Basic execution with default parameters (metric: KL, model: base_version):
 
 ```bash
-python scripts/01_downloads.py
-
-for metric in WD KL JS MMD; do
-  python scripts/02_preprocessing.py -metric=$metric
-  for model_version in base_version normalized_version mlp_version; do
-    python scripts/03_adapter_prediction.py -metric=$metric -model=$model_version
-  done
-done
+bash run_script.sh
 ```
 
-This comprehensive run takes approximately 6-8 hours on a single laptop with 20 CPU cores and 64 GB RAM.
-
-### Inference and Evaluation (GPU required)
-
-After generating adapters, run inference on your selected dataset (change `data_index` as needed):
+- Custom execution:
 
 ```bash
-for metric in WD KL JS MMD; do
-  for model_version in base_version normalized_version mlp_version; do
-    for data_index in {0..501}; do
-      python scripts/04_models_inference.py -metric=$metric -model=$model_version -data_index=$data_index
-    done
-  done
-done
+bash run_script.sh -metric WD -model normalized_version
 ```
 
-Then, evaluate all generated model outputs:
+- Comprehensive execution for all metrics (`WD`, `KL`, `JS`, `MMD`) and all models (`base_version`, `normalized_version`, `mlp_version`):
 
 ```bash
-python scripts/05_evaluations.py
+bash run_script.sh -metric all -model all
 ```
 
-**Note:** These steps are GPU-intensive and require significant computational resources.
+**Note:** Running inference (`-inference` flag) is extremely time-consuming and computationally intensive. Ensure sufficient GPU resources are available. We tested our code on 32 RTX 6000 GPUs in parallel for 2 days since we had to test 500 datasets with 12 different settings resulting in generating outputs for more than 6000 times. If you have access to such computational power, for your convenience, we also provided the scripts for doing some steps (including the inference) in parallel at `running_experiments` folder.
 
----
+- Execution with inference and evaluation of the outputs (time-intensive!):
+
+```bash
+bash run_script.sh -metric KL -model base_version -inference
+```
+
+**Note:** If you change your LoRA dataset bank, make sure to adjust the loop in the inference part of the script accordingly (`data_index` range).
+
 
 ## Notes
 

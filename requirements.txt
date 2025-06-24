@@ -53,8 +53,11 @@ regex==2024.11.6
 requests==2.32.3
 rouge_score==0.1.2
 safetensors==0.5.3
+scikit-learn==1.6.1
+scipy==1.15.3
 six==1.17.0
 sympy==1.13.1
+threadpoolctl==3.6.0
 tokenizers==0.21.1
 torch==2.6.0+cu118
 torchaudio==2.6.0+cu118
@@ -65,7 +68,7 @@ triton==3.2.0
 typing_extensions==4.12.2
 tzdata==2025.2
 urllib3==2.4.0
-wget
+wget==3.2
 xxhash==3.5.0
 yarl==1.20.0
 
