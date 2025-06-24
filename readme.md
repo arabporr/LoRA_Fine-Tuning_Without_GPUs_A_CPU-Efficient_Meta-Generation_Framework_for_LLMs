@@ -72,7 +72,7 @@ However, you might wish to use different models or settings tailored to your own
 ├── scripts/
 ├── src/
 │   ├── adapter_prediction/
-│   │    └── models/
+│   │   └── models/
 │   ├── config/
 │   ├── data/
 │   ├── evaluation/
