@@ -8,7 +8,7 @@ script_content = """#!/bin/bash
 #SBATCH -c 30
 #SBATCH --mem=64G
 #SBATCH --gres=gpu:1
-#SBATCH --time=2:00:00
+#SBATCH --time=7:59:00
 #SBATCH --output=logs/prediction_{metric}_{model}/slurm-%j.out
 #SBATCH --error=logs/prediction_{metric}_{model}/slurm-%j.err
 

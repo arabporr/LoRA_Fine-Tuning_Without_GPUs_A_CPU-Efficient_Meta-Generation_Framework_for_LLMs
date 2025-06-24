@@ -5,6 +5,8 @@ import torch.nn as nn
 
 from tqdm import tqdm
 
+from sklearn.preprocessing import StandardScaler
+
 from src.config.paths import all_adapters_file_location
 from src.data.LoRAs_Info import Number_of_LoRAs
 
@@ -14,11 +16,15 @@ class MLP(nn.Module):
     def __init__(self):
         super(MLP, self).__init__()
         self.mlp = nn.Sequential(
-            nn.Linear(1, 100),
+            nn.Linear(1, 4000),
+            nn.LayerNorm(4000),
             nn.ReLU(),
-            nn.Linear(100, 100),
+
+            nn.Linear(4000, 4000),
+            nn.LayerNorm(4000),
             nn.ReLU(),
-            nn.Linear(100, 1),
+
+            nn.Linear(4000, 1),
         )
 
     def forward(self, x):
@@ -28,8 +34,11 @@ class MLP(nn.Module):
 def mlp_version_coefficient_calculator(
     distances_vectors: torch.tensor,
 ) -> torch.tensor:
-
     all_adapters = torch.load(all_adapters_file_location, weights_only=False)
+
+    scaler = StandardScaler()
+    distances_vectors = scaler.fit_transform(distances_vectors.T).T
+    distances_vectors = torch.tensor(distances_vectors).float()
 
     # Split into train and test indices (80-20 split)
     random.seed(42)
