@@ -1,6 +1,17 @@
-# Low-Rank Adaptation (LoRA) of Large Language Models on CPU
+# LoRA Fine-Tuning Without GPUs: A CPU-Efficient Meta-Generation Framework for LLMs
 
-This repository accompanies our paper, **"Large Language Model Low-Rank Adaptation on CPU"**, which introduces a novel, CPU-based method for efficiently generating Low-Rank Adapters (LoRA) to fine-tune large language models (LLMs). The method addresses the computational limitations many users face due to the intensive GPU requirements of traditional fine-tuning.
+This repository accompanies our paper, **LoRA Fine-Tuning Without GPUs: A CPU-Efficient Meta-Generation Framework for LLMs**, which introduces a novel, CPU-based method for efficiently generating Low-Rank Adapters (LoRA) to fine-tune large language models (LLMs). The method addresses the computational limitations many users face due to the intensive GPU requirements of traditional fine-tuning.
+
+```bibtex
+@inproceedings{
+  arabpour2025large,
+  title={Large Language Model Low-Rank Adaptation on {CPU}},
+  author={Reza Arabpour and Anastasis Kratsios and Haitz S{\'a}ez de Oc{\'a}riz Borde},
+  booktitle={ES-FoMo III: 3rd Workshop on Efficient Systems for Foundation Models},
+  year={2025},
+  url={https://openreview.net/forum?id=4xn3oNRHIx}
+}
+```
 
 ---
 
@@ -8,7 +19,7 @@ This repository accompanies our paper, **"Large Language Model Low-Rank Adaptati
 
 Our work introduces a theoretically grounded approach to fine-tuning large language models using Low-Rank Adapters without the need for GPU resources. The method leverages similarity metrics (Wasserstein Distance, Kullback–Leibler Divergence, Jensen-Shannon Divergence, and Maximum Mean Discrepancy) to combine pre-trained adapters based on dataset similarities. This combination approach generates lightweight adapters suitable for performing downstream tasks efficiently.
 
-The paper demonstrates that even on CPUs, our proposed adapter generation pipelines significantly outperform the raw performance of base foundation models, achieving up to a 30.9% increase in Rouge-L scores. We provide comprehensive experimental validation using the Mistral-7B-Instruct-v0.2 model across 500 diverse natural language datasets.
+The paper demonstrates that even on CPUs, our proposed adapter generation pipelines significantly outperform the raw performance of the base Mistral foundation model, achieving up to a 30.9% increase in Rouge-L scores. We provide comprehensive experimental validation using the Mistral-7B-Instruct-v0.2 model across 500 diverse natural language datasets.
 
 **Important Note:** Although adapter generation and prediction (the main part of the paper) are optimized for CPU-only execution, the subsequent testing on 500 datasets (inference and evaluation processes) are computationally heavy and require GPU resources to generate model outputs for results tables.
 
