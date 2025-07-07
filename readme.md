@@ -1,6 +1,6 @@
 # LoRA Fine-Tuning Without GPUs: A CPU-Efficient Meta-Generation Framework for LLMs
 
-This repository accompanies our paper, **"LoRA Fine-Tuning Without GPUs: A CPU-Efficient Meta-Generation Framework for LLMs"** presented at **ES-FoMo III: 3rd Workshop on Efficient Systems for Foundation Models (ICML 2025)**, which introduces a novel, CPU-based method for efficiently generating Low-Rank Adapters (LoRA) to fine-tune large language models (LLMs). The method addresses the computational limitations many users face due to the intensive GPU requirements of traditional fine-tuning.
+This repository accompanies our paper, **["LoRA Fine-Tuning Without GPUs: A CPU-Efficient Meta-Generation Framework for LLMs"](https://arxiv.org/abs/2507.01806)** presented at **ES-FoMo III: 3rd Workshop on Efficient Systems for Foundation Models (ICML 2025)**, which introduces a novel, CPU-based method for efficiently generating Low-Rank Adapters (LoRA) to fine-tune large language models (LLMs). The method addresses the computational limitations many users face due to the intensive GPU requirements of traditional fine-tuning.
 
 ```bibtex
 @inproceedings{
