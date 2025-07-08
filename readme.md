@@ -3,13 +3,14 @@
 This repository accompanies our paper, **["LoRA Fine-Tuning Without GPUs: A CPU-Efficient Meta-Generation Framework for LLMs"](https://arxiv.org/abs/2507.01806)** presented at **ES-FoMo III: 3rd Workshop on Efficient Systems for Foundation Models (ICML 2025)**, which introduces a novel, CPU-based method for efficiently generating Low-Rank Adapters (LoRA) to fine-tune large language models (LLMs). The method addresses the computational limitations many users face due to the intensive GPU requirements of traditional fine-tuning.
 
 ```bibtex
-@inproceedings{
-  arabpour2025large,
-  title={Large Language Model Low-Rank Adaptation on {CPU}},
-  author={Reza Arabpour and Anastasis Kratsios and Haitz S{\'a}ez de Oc{\'a}riz Borde},
-  booktitle={ES-FoMo III: 3rd Workshop on Efficient Systems for Foundation Models},
-  year={2025},
-  url={https://openreview.net/forum?id=4xn3oNRHIx}
+@misc{arabpour2025lorafinetuninggpuscpuefficient,
+      title={LoRA Fine-Tuning Without GPUs: A CPU-Efficient Meta-Generation Framework for LLMs}, 
+      author={Reza Arabpour and Haitz Sáez de Ocáriz Borde and Anastasis Kratsios},
+      year={2025},
+      eprint={2507.01806},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2507.01806}, 
 }
 ```
 
